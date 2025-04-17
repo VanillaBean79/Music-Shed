@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-
+from models import Student, Teacher, TeacherStudent
 # Remote library imports
 from flask import request
 from flask_restful import Resource
@@ -15,7 +15,7 @@ from config import app, db, api
 
 @app.route('/')
 def index():
-    return '<h1>Project Server</h1>'
+    return '<h1>Music Shed</h1>'
 
 
 if __name__ == '__main__':

@@ -24,7 +24,8 @@ class Student(db.Model, SerializerMixin):
     teacher_students = db.relationship(
         'TeacherStudent',
         back_populates='student',
-        cascade='all, delete-orphan'
+        cascade='all, delete-orphan',
+        overlaps="teachers"
     )
 
     serialize_rules = (
@@ -45,13 +46,15 @@ class Teacher(db.Model, SerializerMixin):
     students = db.relationship(
         'Student',
         secondary='teacher_student',
-        back_populates='teachers'
+        back_populates='teachers',
+        overlaps="teacher_students"
     )
 
     teacher_students = db.relationship(
         'TeacherStudent',
         back_populates='teacher',
-        cascade='all, delete-orphan'
+        cascade='all, delete-orphan',
+        overlaps="students"
     )
 
     serialize_rules = (
@@ -66,17 +69,20 @@ class TeacherStudent(db.Model, SerializerMixin):
     
     id = db.Column(db.Integer, primary_key=True)
     cost = db.Column(db.Integer, nullable=False)
-    duration = db.Column(db.Integer, nullabel=False)
+    duration = db.Column(db.Integer, nullable=False)
 
     teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'))
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
 
     student = db.relationship('Student',
                               back_populates='teacher_students',
+                              overlaps="teachers, students"
                               )
     
     teacher = db.relationship('Teacher',
-                              back_populates='teacher_students')
+                              back_populates='teacher_students',
+                              overlaps='teachers, students'
+                              )
     
     serialize_rules = (
         '-student.teacher_students',
