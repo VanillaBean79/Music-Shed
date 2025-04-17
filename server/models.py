@@ -3,7 +3,7 @@ from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import validates, relationship
 from config import db
-
+from datetime import datetime
 
 
 class Student(db.Model, SerializerMixin):
@@ -17,19 +17,19 @@ class Student(db.Model, SerializerMixin):
 
     teachers = db.relationship(
         'Teacher',
-        secondary='teacher_student',
+        secondary='appointments',
         back_populates='students'
     )
 
-    teacher_students = db.relationship(
-        'TeacherStudent',
+    appointments = db.relationship(
+        'Appointment',
         back_populates='student',
         cascade='all, delete-orphan',
         overlaps="teachers"
     )
 
     serialize_rules = (
-        '-teacher_students.student',
+        '-appointments.student',
         '-teachers.students'
     )
 
@@ -45,48 +45,49 @@ class Teacher(db.Model, SerializerMixin):
 
     students = db.relationship(
         'Student',
-        secondary='teacher_student',
+        secondary='appointments',
         back_populates='teachers',
-        overlaps="teacher_students"
+        overlaps="appointments"
     )
 
-    teacher_students = db.relationship(
-        'TeacherStudent',
+    appointments = db.relationship(
+        'Appointment',
         back_populates='teacher',
         cascade='all, delete-orphan',
         overlaps="students"
     )
 
     serialize_rules = (
-        '-teacher_students.teacher',
+        '-appointments.teacher',
         '-students.teachers'
     )
 
 
 
-class TeacherStudent(db.Model, SerializerMixin):
-    __tablename__ = "teacher_student"
+class Appointment(db.Model, SerializerMixin):
+    __tablename__ = "appointments"
     
     id = db.Column(db.Integer, primary_key=True)
     cost = db.Column(db.Integer, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
+    lesson_datetime = db.Column(db.DateTime, nullable=False)
 
     teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'))
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
 
     student = db.relationship('Student',
-                              back_populates='teacher_students',
+                              back_populates='appointments',
                               overlaps="teachers, students"
                               )
     
     teacher = db.relationship('Teacher',
-                              back_populates='teacher_students',
+                              back_populates='appointments',
                               overlaps='teachers, students'
                               )
     
     serialize_rules = (
-        '-student.teacher_students',
-        '-teacher.teacher_students'
+        '-student.appointments',
+        '-teacher.appointments'
     )
 
 
@@ -103,3 +104,8 @@ class TeacherStudent(db.Model, SerializerMixin):
             raise ValueError('Lesson duration must be 30, 45, or 60 minutes.')
         return value
 
+
+    @validates('lesson_datetime')
+    def validate_datetime(self, key, value):
+        if not isinstance(value, datetime):
+            raise ValueError("Must be a valid datetime.")

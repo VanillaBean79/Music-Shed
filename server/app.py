@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard library imports
-from models import Student, Teacher, TeacherStudent
+from models import Student, Teacher, Appointment
 # Remote library imports
 from flask import request
 from flask_restful import Resource
