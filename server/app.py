@@ -18,6 +18,13 @@ def index():
     return '<h1>Music Shed</h1>'
 
 
+@app.route('/students', methods=['GET'])
+def get_students():
+    students = Student.query.all()
+#   return [object.to_dict() for object in query_result], status_code
+    return [student.to_dict() for student in students], 200
+
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
 
