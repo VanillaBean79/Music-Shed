@@ -18,7 +18,8 @@ class Student(db.Model, SerializerMixin):
     teachers = db.relationship(
         'Teacher',
         secondary='appointments',
-        back_populates='students'
+        back_populates='students',
+        overlaps='appointments'
     )
 
     appointments = db.relationship(
@@ -109,3 +110,4 @@ class Appointment(db.Model, SerializerMixin):
     def validate_datetime(self, key, value):
         if not isinstance(value, datetime):
             raise ValueError("Must be a valid datetime.")
+        return value

@@ -1,45 +1,72 @@
-#!/usr/bin/env python3
-
 # Standard library imports
-from random import randint, choice as rc
+from datetime import datetime, timedelta, time
+from random import randint, choice
 
 # Remote library imports
 from faker import Faker
-from models import Student, Teacher, Appointment
+
 # Local imports
 from app import app
-from models import db
-from datetime import datetime, timedelta
+from models import db, Student, Teacher, Appointment
+
+fake = Faker()
 
 if __name__ == '__main__':
-    fake = Faker()
     with app.app_context():
-        print("Starting seed...")
-        
+        print("🌱 Starting seed...")
+
         db.drop_all()
         db.create_all()
 
+        instruments = [
+            "Bass Guitar", "Acoustic Guitar", "Piano", "Drums",
+            "Voice", "Cello", "Brass", "Woodwind"
+        ]
 
-        now = datetime.now()
-
-        t1 = Teacher(name="Ms. Taylor", age=35)
-        t2 = Teacher(name="Mr. Jenkins", age=42)
+        # Create teachers
+        teachers = [
+            Teacher(name=fake.name(), age=randint(25, 60)) for _ in range(3)
+        ]
 
         # Create students
-        s1 = Student(name="Jordan", age=12, instrument="Guitar")
-        s2 = Student(name="Avery", age=14, instrument="Piano")
-        s3 = Student(name="Kai", age=11, instrument="Violin")
+        students = [
+            Student(name=fake.name(), age=randint(12, 18), instrument=choice(instruments))
+            for _ in range(5)
+        ]
 
-        # Create teacher-student associations (lessons)
-        a1 = Appointment(teacher=t1, student=s1, cost=30, duration=30)
-        a2 = Appointment(teacher=t1, student=s2, cost=40, duration=45)
-        a3 = Appointment(teacher=t2, student=s3, cost=50, duration=60)
-        a4 = Appointment(teacher=t2, student=s1, cost=30, duration=30)
-
-        # Add everything to the session
-        db.session.add_all([t1, t2, s1, s2, s3, a1, a2, a3, a4])
+        db.session.add_all(teachers + students)
         db.session.commit()
 
-        print("🌱 Database seeded successfully!")
+        # Create appointments
+        appointments = []
+
+        for _ in range(8):
+            teacher = choice(teachers)
+            student = choice(students)
+
+            days_ahead = randint(1, 7)
+            hour = randint(9, 19)  # Between 9 AM and 7 PM
+
+            future_date = datetime.now() + timedelta(days=days_ahead)
+            lesson_datetime = future_date.replace(hour=hour, minute=0, second=0, microsecond=0)
 
 
+            cost = choice([30, 40, 50])
+            duration = choice([30, 45, 60])
+
+            print(f"[DEBUG] Appointment datetime: {lesson_datetime} | Teacher: {teacher.name} | Student: {student.name}")
+
+            appointments.append(
+                Appointment(
+                    teacher=teacher,
+                    student=student,
+                    cost=cost,
+                    duration=duration,
+                    lesson_datetime=lesson_datetime
+                )
+            )
+
+        db.session.add_all(appointments)
+        db.session.commit()
+
+        print("✅ Database seeded successfully!")
