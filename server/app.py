@@ -35,16 +35,32 @@ class StudentList(Resource):
         return new_student.to_dict(), 201
     
     
-api.add_resource(StudentList, '/students')
+
 
 
 
 class TeacherList(Resource):
     def get(self):
         teachers = Teacher.query.all()
-        return [teacher.to_dict(rules=('-appointmetns', '-students')) for teacher in teachers], 200
+        return [teacher.to_dict(rules=('-appointments', '-students')) for teacher in teachers], 200
     
     
+    def post(self):
+        data = request.get_json()
+        new_teacher = Teacher(
+            name = data.get('name'),
+            age = data.get('age')
+        )
+        
+        db.session.add(new_teacher)
+        db.session.commit()
+        
+        return new_teacher.to_dict(), 201
+
+
+
+api.add_resource(StudentList, '/students')    
+api.add_resource(TeacherList, '/teachers')   
     # def post(self):
     #     data = request.get_json()
     #     new_teacher = Teacher(
