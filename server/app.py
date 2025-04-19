@@ -58,14 +58,15 @@ class TeacherList(Resource):
         return new_teacher.to_dict(), 201
 
 
-
+class AppointmentList(Resource):
+    def get(self):
+        appointments = Appointment.query.all()
+        return [appointment.to_dict(rules=('-students', 'teacher'))for appointment in appointments]
+    
+    
+api.add_resource(AppointmentList, '/appointments')
 api.add_resource(StudentList, '/students')    
 api.add_resource(TeacherList, '/teachers')   
-    # def post(self):
-    #     data = request.get_json()
-    #     new_teacher = Teacher(
-            
-    #     )
     
     
 @app.route('/')
