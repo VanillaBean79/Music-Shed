@@ -33,6 +33,22 @@ class Student(db.Model, SerializerMixin):
         '-appointments.student',
         '-teachers.students'
     )
+    
+    
+    @validates('name')
+    def validate_name(self, key, value):
+        if not value or not value.strip():
+            raise ValueError("Student name cannot be blank.")
+        return value
+    
+    
+    @validates('age')
+    def validate_age(self, key, value):
+        if not isinstance(value, int) or value < 5:
+            raise ValueError("Student age must be a number greater than 5.")
+        return value
+        
+    
 
 
 

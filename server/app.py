@@ -37,7 +37,7 @@ class StudentList(Resource):
     
 class StudentByID(Resource):
     def get(self, id):
-        student = Student.query.filter(id==id).first()
+        student = Student.query.get(id)
         
         if student:
             return student.to_dict(rules=('-appointments', '-teachers')), 200
@@ -102,13 +102,13 @@ class AppointmentList(Resource):
             duration=data.get('duration'),
             lesson_datetime=datetime.fromisoformat(data.get('lesson_datetime'))
         )
-        db.sessio.add(new_appointment)
+        db.session.add(new_appointment)
         db.session.commit()
         
         return new_appointment.to_dict(), 201
         
     
-    
+api.add_resource(StudentByID, '/students/<int:id>')   
 api.add_resource(AppointmentList, '/appointments')
 api.add_resource(StudentList, '/students')    
 api.add_resource(TeacherList, '/teachers')   
