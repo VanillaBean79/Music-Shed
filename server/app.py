@@ -46,13 +46,24 @@ class StudentByID(Resource):
         
         
     def patch(self, id):
-        student = Student.query.filter(id==id).first()
+        student = Student.query.get(id)
         data = request.get_json()
         for attr in ['name', 'age', 'instrument']:
             if attr in data:
                 setattr(student, attr, data[attr])
         db.session.commit()
         return student.to_dict(), 200
+    
+    
+    def delete(self, id):
+        student = Student.query.get(id)
+        
+        if student:
+            db.session.delete(student)
+            db.session.commit()
+            return {}, 204
+        else:
+            return {"error": "Student not found"}, 404
 
 
 
