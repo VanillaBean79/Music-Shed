@@ -88,7 +88,9 @@ class Appointment(db.Model, SerializerMixin):
     
     serialize_rules = (
         '-student.appointments',
-        '-teacher.appointments'
+        '-teacher.appointments',
+        '-student.teachers',
+        '-teacher.students'
     )
 
 

@@ -5,7 +5,7 @@
 # Remote library imports
 from flask import request
 from flask_restful import Resource
-
+from datetime import datetime
 # Local imports
 from config import app, db, api
 # Add your model imports
@@ -60,8 +60,24 @@ class TeacherList(Resource):
 
 class AppointmentList(Resource):
     def get(self):
-        appointments = Appointment.query.all()
-        return [appointment.to_dict(rules=('-students', 'teacher'))for appointment in appointments]
+        appointments = Appointment.query.limit(1).all()
+        return [a.to_dict(rules=('-student.appointments', '-teacher.appointments', 'student.teachers', 'teacher.students'))for a in appointments], 200
+    
+    
+    def post(self):
+        data = request.get_json()
+        new_appointment = Appointment(
+            teacher_id=data.get('teacher_id'),
+            student_id=data.get('student_id'),
+            cost=data.get('cost'),
+            duration=data.get('duration'),
+            lesson_datetime=datetime.fromisoformat(data.get('lesson_datetime'))
+        )
+        db.sessio.add(new_appointment)
+        db.session.commit()
+        
+        return new_appointment.to_dict(), 201
+        
     
     
 api.add_resource(AppointmentList, '/appointments')
