@@ -35,6 +35,24 @@ class StudentList(Resource):
         return new_student.to_dict(), 201
     
     
+class StudentByID(Resource):
+    def get(self, id):
+        student = Student.query.filter(id==id).first()
+        
+        if student:
+            return student.to_dict(rules=('-appointments', '-teachers')), 200
+        else:
+            return {'error': 'Student not found'}, 404
+        
+        
+    def patch(self, id):
+        student = Student.query.filter(id==id).first()
+        data = request.get_json()
+        for attr in ['name', 'age', 'instrument']:
+            if attr in data:
+                setattr(student, attr, data[attr])
+        db.session.commit()
+        return student.to_dict(), 200
 
 
 
