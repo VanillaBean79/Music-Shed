@@ -186,12 +186,31 @@ class Login(Resource):
     
     
     
+class Logout(Resource):
+    def delete(self):
+        session.pop('student_id', None)
+        return {}, 204
+    
+    
+    
+class CheckSession(Resource):
+    def get(self):
+        student_id = session.get('student_id')
+        
+        if student_id:
+            student = Student.query.get(student_id)
+            return student.to_dict(), 200
+        return {'error':'Not logged in'}, 401
+    
     
     
     
     
 
-api.add_resource(Signup, '/signup')        
+api.add_resource(Signup, '/signup')
+api.add_resource(Login, '/login')
+api.add_resource(Logout, '/logout')
+api.add_resource(CheckSession, '/check_session')        
 api.add_resource(AppointmentByID, '/appointments/<int:id>')
 api.add_resource(StudentByID, '/students/<int:id>')   
 api.add_resource(AppointmentList, '/appointments')

@@ -11,9 +11,12 @@ class Student(db.Model, SerializerMixin):
     __tablename__ = "students"
     #label columns
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, unique=True, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
     name = db.Column(db.String)
     age = db.Column(db.Integer)
     instrument = db.Column(db.String)
+    
     # add relationships
     
     def set_password(self, password):

@@ -28,11 +28,21 @@ if __name__ == '__main__':
             Teacher(name=fake.name(), age=randint(25, 60)) for _ in range(3)
         ]
 
-        # Create students
-        students = [
-            Student(name=fake.name(), age=randint(12, 18), instrument=choice(instruments))
-            for _ in range(5)
-        ]
+        students = []
+        for _ in range(5):
+            name = fake.name()
+            username = fake.user_name()
+            password = "test123"
+            
+            student = Student(
+                name=name,
+                age=randint(12, 65),
+                instrument=choice(instruments),
+                username=username
+            )
+            student.set_password(password)
+            
+            students.append(student)
 
         db.session.add_all(teachers + students)
         db.session.commit()
