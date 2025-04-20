@@ -3,7 +3,7 @@
 # Standard library imports
 
 # Remote library imports
-from flask import request
+from flask import request, session
 from flask_restful import Resource
 from datetime import datetime
 # Local imports
@@ -149,8 +149,49 @@ class AppointmentByID(Resource):
         db.session.commit()
         
         return {"message": f"Appointment {id} deleted."}, 200
-            
+    
+    
+class Signup(Resource):
+    def post(self):
+        data = request.get_json()
         
+        if Student.query.filter_by(username=data['username']).first():
+            return {'error': 'Username already taken'}, 409
+        
+        student = Student(
+            username = data['username'],
+            name=data.get('name'),
+            age=data.get('age'),
+            instrument=data.get('instrument')
+        )
+        student.set_password(data['password'])
+        
+        db.session.add(student)
+        db.session.commit()
+        
+        session['student_id'] = student.id
+        return student.to_dict(), 201
+    
+    
+class Login(Resource):
+    def post(self):
+        data = request.get_json()
+        student = Student.query.filter_by(username=data.get('username')).first()
+        
+        if student and student.check_password(data.get('password')):
+            session['student_id'] = student.id
+            return student.to_dict(), 200
+        
+        return {'error': 'Invalid username or password'}
+    
+    
+    
+    
+    
+    
+    
+
+api.add_resource(Signup, '/signup')        
 api.add_resource(AppointmentByID, '/appointments/<int:id>')
 api.add_resource(StudentByID, '/students/<int:id>')   
 api.add_resource(AppointmentList, '/appointments')

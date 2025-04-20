@@ -4,6 +4,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import validates, relationship
 from config import db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Student(db.Model, SerializerMixin):
@@ -14,6 +15,13 @@ class Student(db.Model, SerializerMixin):
     age = db.Column(db.Integer)
     instrument = db.Column(db.String)
     # add relationships
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
+        
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     teachers = db.relationship(
         'Teacher',
