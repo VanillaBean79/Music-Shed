@@ -108,7 +108,7 @@ class AppointmentList(Resource):
         return new_appointment.to_dict(), 201
     
 class AppointmentByID(Resource):
-    def get_appointment_by_id(self, id):
+    def get(self, id):
             
         appointment = Appointment.query.get(id)
             
@@ -116,7 +116,39 @@ class AppointmentByID(Resource):
             return appointment.to_dict(), 200
         else:
             return {"message":"No appointment found."}
-            
+        
+        
+    def patch(self, id):
+        
+        appointment = Appointment.query.get(id)
+        if not appointment:
+            return {"message": "Appointment not found"}
+        
+        data = request.get_json()
+        
+        if 'cost' in data:
+            appointment.cost = data['cost']
+        if 'duration' in data:
+            appointment.duration = data['duration']
+        if 'lesson_datetime' in data:
+            appointment.lesson_datetime = datetime.fromisoformat(data['lesson_datetime'])
+        
+        db.session.commit()
+        
+        return appointment.to_dict(), 200
+    
+    
+    def delete(self, id):
+        
+        appointment = Appointment.query.get(id)
+        
+        if not appointment:
+            return {"message": "Appointment not found."}
+        
+        db.session.delete(appointment)
+        db.session.commit()
+        
+        return {"message": f"Appointment {id} deleted."}, 200
             
         
 api.add_resource(AppointmentByID, '/appointments/<int:id>')
