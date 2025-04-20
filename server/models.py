@@ -47,6 +47,13 @@ class Student(db.Model, SerializerMixin):
         if not isinstance(value, int) or value < 5:
             raise ValueError("Student age must be a number greater than 5.")
         return value
+    
+    
+    @validates('instrument')
+    def validate_instrument(self, key, value):
+        if not value or not value.strip():
+            raise ValueError("Instrument name cannot be blank.")
+        return value
         
     
 
@@ -129,3 +136,6 @@ class Appointment(db.Model, SerializerMixin):
         if not isinstance(value, datetime):
             raise ValueError("Must be a valid datetime.")
         return value
+    
+    
+

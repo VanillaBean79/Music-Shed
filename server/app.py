@@ -106,8 +106,20 @@ class AppointmentList(Resource):
         db.session.commit()
         
         return new_appointment.to_dict(), 201
-        
     
+class AppointmentByID(Resource):
+    def get_appointment_by_id(self, id):
+            
+        appointment = Appointment.query.get(id)
+            
+        if appointment:
+            return appointment.to_dict(), 200
+        else:
+            return {"message":"No appointment found."}
+            
+            
+        
+api.add_resource(AppointmentByID, '/appointments/<int:id>')
 api.add_resource(StudentByID, '/students/<int:id>')   
 api.add_resource(AppointmentList, '/appointments')
 api.add_resource(StudentList, '/students')    
