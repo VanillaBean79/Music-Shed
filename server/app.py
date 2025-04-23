@@ -100,7 +100,7 @@ class AppointmentList(Resource):
             student_id=data.get('student_id'),
             cost=data.get('cost'),
             duration=data.get('duration'),
-            lesson_datetime=datetime.fromisoformat(data.get('lesson_datetime'))
+            lesson_datetime = datetime.fromisoformat(data.get('lesson_datetime').replace('Z', ''))
         )
         db.session.add(new_appointment)
         db.session.commit()
