@@ -1,58 +1,45 @@
 import React, { useState } from "react"
-import { useHistory } from "react-router-dom"
 
-function Signup() {
-    const [formData, setFormData] = useState({
-        username: "",
-        name: "",
-        age: "",
-        instrument: "",
-        password: ""
+
+function Signup({onSignup}) {
+  const [ formData, setFormData] = useState({
+    username:"",
+    password:"",
+    name:"",
+    age:"",
+    instrument:""
+  })
+
+  function handleChange(e) {
+    setFormData({...formData, [e.target.name]: e.target.value})
+  }
+
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    fetch("/signup", {
+      method: "POST",
+      headers: { "Content-Type": "apllication/json"},
+      body: JSON.stringify(formData),
     })
-    const history = useHistory()
+    .then((r)=> {
+      if (r.ok) return r.json().then(onSignup)
+        else return r.json().then((err)=>alert(err.error))
+    })
+  }
 
-    function handleChange(e) {
-        setFormData({...formData, [e.target.name]: e.target.value })
-    }
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Sign Up</h2>
+      <input name="username" placeholder="Username" onChange={handleChange}/>
+      <input type="password" name="password" placeholder="Password" onChange={handleChange}/>
+      <input name="name" placeholder="Full Name" onChange={handleChange}/>
+      <input age="age" placeholder="Age" onChange={handleChange}/>
+      <input name="instrument" placeholder="Instrument" onChange={handleChange}/>
+      <button type="submit">Register</button> 
+    </form>
+  )
 
-    function handleSubmit(e) {
-        e.preventDefault()
-
-        const formDataToSend = {
-            ...formData,
-            age: parseInt(formData.age)
-        }
-        fetch("/signup",{
-            method: "POST",
-            headers: { "Content-Type": "application/json"},
-            body: JSON.stringify(formDataToSend)
-        })
-        .then(res => {
-            if (res.ok) return res.json()
-                return res.json().then(err => Promise.reject(err))
-        })
-        .then(()=> history.push("/teachers"))
-        .catch(err => alert(err.erro || "Signup failld"))
-    }
-
-
-    return (
-        <form onSubmit={handleSubmit}>
-          <h2>Sign Up</h2>
-          {["username", "name", "age", "instrument", "password"].map(field => (
-            <div key={field}>
-              <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
-              <input
-                type={field === "password" ? "password" : "text"}
-                name={field}
-                value={formData[field]}
-                onChange={handleChange}
-              />
-            </div>
-          ))}
-          <button type="submit">Register</button>
-        </form>
-      );
-    }
+}
     
     export default Signup;

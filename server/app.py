@@ -149,7 +149,18 @@ class AppointmentByID(Resource):
         db.session.commit()
         
         return {"message": f"Appointment {id} deleted."}, 200
-    
+
+
+class StudentAppointments(Resource):
+    def get (self, student_id):
+        student = Student.query.get(student_id)
+        appointments = student.appointments
+        
+        if not appointments:
+            return {"message": " No appointments found"}
+        
+        return [appointment.to_dict()for appointment in appointments], 200
+           
     
 class Signup(Resource):
     def post(self):
@@ -203,10 +214,20 @@ class CheckSession(Resource):
         return {'error':'Not logged in'}, 401
     
     
+# class StudentAppointments(Resource):
+#     def get(self, id):
+#         student = Student.query.get(id)
+#         if not student:
+#             return {'error': 'Student not found'}, 404
+        
+#         return [appt.to_dict() for appt in student.appointments], 200
     
     
     
-
+    
+api.add_resource(StudentAppointments, '/students/<int:student_id>/appointments')
+   
+# api.add_resource(StudentAppointments, '/students/<int:id>/appointments')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
 api.add_resource(Logout, '/logout')

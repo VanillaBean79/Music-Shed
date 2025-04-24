@@ -103,12 +103,11 @@ class Appointment(db.Model, SerializerMixin):
     __tablename__ = "appointments"
     
     id = db.Column(db.Integer, primary_key=True)
-    cost = db.Column(db.Integer, nullable=False)
-    duration = db.Column(db.Integer, nullable=False)
     lesson_datetime = db.Column(db.DateTime, nullable=False)
-
-    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id'))
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'))
+    teacher_id = db.Column(db.Integer, db.ForeignKey('teachers.id', name='fk_appointments_teacher_id'),
+                           nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id', name='fk_appointments_student_id'),
+                           nullable=False)
 
     student = db.relationship('Student',
                               back_populates='appointments',
