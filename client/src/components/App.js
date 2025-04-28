@@ -1,34 +1,34 @@
 // App.js
+
+// App.js
 import React, { useState, useEffect } from "react";
-import { HashRouter as Router, Route, Switch } from "react-router-dom";
-import { UserContext } from "./UserContext";
-import Home from "./Home";
-import Signup from "./Signup";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./Home"
+import Signup from "./Signup"
+import TeachersList from "./TeachersList"
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null)
 
-  // Check session when app loads
-  useEffect(() => {
+
+  useEffect(()=>{
     fetch("/check_session")
-      .then((r) => {
-        if (r.ok) return r.json().then(setUser);
-      });
-  }, []);
+    .then((r)=>{
+      if (r.ok) return r.json().then(setUser)
+    })
+  },[])
+
+
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
-      <Router>
-        <Switch>
-          <Route path="/" exact component={Home} />
-          <Route path="/signup" component={Signup} />
-          
-        </Switch>
-      </Router>
-    </UserContext.Provider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home  user={user}/>} />
+        <Route path="/signup" element={<Signup />}/>
+        <Route path="/teachers" element={<TeachersList user={user}/>}/>
+      </Routes>
+    </Router>
   );
 }
 
 export default App;
-
-

@@ -125,20 +125,7 @@ class Appointment(db.Model, SerializerMixin):
         '-student.teachers',
         '-teacher.students'
     )
-
-
-    @validates('cost')
-    def validate_cost(self, key, value):
-        if value not in [30, 40, 50]:
-            raise ValueError('Cost must be either $30, $40, or $50.')
-        return value 
     
-
-    @validates('duration')
-    def validate_duration(self, key, value):
-        if value not in [30, 45, 60]:
-            raise ValueError('Lesson duration must be 30, 45, or 60 minutes.')
-        return value
 
 
     @validates('lesson_datetime')

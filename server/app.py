@@ -39,10 +39,10 @@ class StudentByID(Resource):
     def get(self, id):
         student = Student.query.get(id)
         
-        if student:
-            return student.to_dict(rules=('-appointments', '-teachers')), 200
-        else:
-            return {'error': 'Student not found'}, 404
+        if not student:
+            return {"error": "Student not found"}, 404
+
+        return student.to_dict(), 200
         
         
     def patch(self, id):
@@ -98,8 +98,6 @@ class AppointmentList(Resource):
         new_appointment = Appointment(
             teacher_id=data.get('teacher_id'),
             student_id=data.get('student_id'),
-            cost=data.get('cost'),
-            duration=data.get('duration'),
             lesson_datetime = datetime.fromisoformat(data.get('lesson_datetime').replace('Z', ''))
         )
         db.session.add(new_appointment)
@@ -210,24 +208,22 @@ class CheckSession(Resource):
         
         if student_id:
             student = Student.query.get(student_id)
-            return student.to_dict(), 200
-        return {'error':'Not logged in'}, 401
-    
-    
-# class StudentAppointments(Resource):
-#     def get(self, id):
-#         student = Student.query.get(id)
-#         if not student:
-#             return {'error': 'Student not found'}, 404
+            if student:
+                return student.to_dict(), 200
+            else:
+                # Remove invalid session
+                session.pop('student_id', None)
+                return {'error': 'User not found'}, 404
         
-#         return [appt.to_dict() for appt in student.appointments], 200
+        return {'error': 'Not logged in'}, 401
     
     
     
     
-api.add_resource(StudentAppointments, '/students/<int:student_id>/appointments')
+
+
    
-# api.add_resource(StudentAppointments, '/students/<int:id>/appointments')
+api.add_resource(StudentAppointments, '/students/<int:student_id>/appointments')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
 api.add_resource(Logout, '/logout')

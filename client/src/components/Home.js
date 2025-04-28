@@ -1,19 +1,19 @@
 import React from "react";
-import { useHistory } from "react-router-dom";
-// import "./Home.css"; // optional
+import { useNavigate } from "react-router-dom";
 
 function Home() {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <div className="home-container">
       <h1 className="logo">🎵 Music Shed 🎵</h1>
       <div className="button-group">
-        <button onClick={() => history.push("/signup")}>Register</button>
-        <button onClick={() => history.push("/login")}>Login</button>
+        <button onClick={() => navigate("/signup")}>Signup</button>
+        <button onClick={() => navigate("/login")}>Login</button>
       </div>
     </div>
   );
 }
 
 export default Home;
+

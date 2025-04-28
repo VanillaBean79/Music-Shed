@@ -61,17 +61,12 @@ if __name__ == '__main__':
             lesson_datetime = future_date.replace(hour=hour, minute=0, second=0, microsecond=0)
 
 
-            cost = choice([30, 40, 50])
-            duration = choice([30, 45, 60])
-
             print(f"[DEBUG] Appointment datetime: {lesson_datetime} | Teacher: {teacher.name} | Student: {student.name}")
 
             appointments.append(
                 Appointment(
                     teacher=teacher,
                     student=student,
-                    cost=cost,
-                    duration=duration,
                     lesson_datetime=lesson_datetime
                 )
             )
