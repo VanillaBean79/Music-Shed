@@ -44,7 +44,7 @@ function MyAppointments({user}){
             {appointments.length === 0 ? (
                 <>
                 <p>No appointments booked.</p>
-                <TeachersList user={user}/> 
+                <TeachersList user={user} onNewAppointment={setAppointments}/> 
                 </>
             ):(
                 <ul>

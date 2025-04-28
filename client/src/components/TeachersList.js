@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from "react-router-dom"
 
-function TeachersList({ user }) {
+function TeachersList({ user, onNewAppointment }) {
     const [teachers, setTeachers] = useState([])
     const [error, setError] = useState(null)
     const [appointmentTimes, setAppointmentTimes] = useState({}) // 🔥 tracks time per teacher
@@ -50,6 +50,14 @@ function TeachersList({ user }) {
             .then((r) => {
                 if (r.ok) {
                     alert("Appointment booked successfully!")
+
+                    fetch(`/students/${user.id}/appointments`)
+                    .then((r)=> r.json())
+                    .then((updatedAppointments)=> {
+                        if (onNewAppointment) {
+                            onNewAppointment(updatedAppointments)
+                        }
+                    })
                 } else {
                     alert("Failed to book appointment.")
                 }
