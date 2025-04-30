@@ -5,3 +5,21 @@
   --text: hsla(0, 0%, 100%, 0.88);
 }
 
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  height: 100%;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* horizontal centering */
+  justify-content: center;   /* vertical centering */
+  min-height: 100vh;
+  text-align: center;
+  padding: 20px;
+}

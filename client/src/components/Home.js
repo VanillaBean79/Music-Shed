@@ -5,7 +5,7 @@ function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="home-container">
+    <div className="page-container">
       <h1 className="logo">🎵 Music Shed 🎵</h1>
       <div className="button-group">
         <button onClick={() => navigate("/signup")}>Signup</button>

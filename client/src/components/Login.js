@@ -32,7 +32,7 @@ function Login ({ setUser }){
     }
 
     return (
-        <div>
+        <div className="page-container">
             <h2>Login</h2>
             <form onSubmit={handleSubmit}>
                 <input

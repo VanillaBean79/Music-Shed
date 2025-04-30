@@ -69,7 +69,7 @@ function TeachersList({ user, onNewAppointment }) {
     }
 
     return (
-        <div>
+        <div className="page-container">
             <h2>Available Teachers</h2>
             <button onClick={()=> navigate("/")}>Back to Home</button>
             {error && <p>{error}</p>}

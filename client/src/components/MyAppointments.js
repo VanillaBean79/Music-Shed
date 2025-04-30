@@ -38,7 +38,7 @@ function MyAppointments({user}){
 
 
     return(
-        <div>
+        <div className="page-container">
             <h2>My Appointments</h2>
             <button onClick={()=> navigate("/")}>Back to Home</button>
             {appointments.length === 0 ? (

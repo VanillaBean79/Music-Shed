@@ -53,7 +53,7 @@ function Signup(){
 
 
     return (
-        <div>
+        <div className="page-container">
             <h2>Signup</h2>
             {error && <p style={{ color: "red" }}>{error}</p>}
             <form onSubmit={handleSubmit}>
