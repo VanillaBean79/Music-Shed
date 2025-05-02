@@ -1,41 +1,35 @@
-// App.js
-
-// App.js
 import React, { useState, useEffect } from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./Home"
-import Signup from "./Signup"
-import TeachersList from "./TeachersList"
-import Login from "./Login"
-import MyAppointments from "./MyAppointments"
-import NavBar from "./NavBar"
-import StudentProfile from "./StudentProfile"
-
-
+import Signup from "./Signup";
+import TeachersList from "./TeachersList";
+import Login from "./Login";
+import NavBar from "./NavBar";
+import StudentDashboard from "./StudentDashboard";
 
 function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(null);
 
-
-  useEffect(()=>{
+  useEffect(() => {
     fetch("/check_session")
-    .then((r)=>{
-      if (r.ok) return r.json().then(setUser)
-    })
-  },[])
+      .then((r) => {
+        if (r.ok) return r.json().then(setUser);
+      });
+  }, []);
 
-
+  const handleLogout = () => {
+    fetch("/logout", {
+      method: "DELETE",
+    }).then(() => setUser(null));
+  };
 
   return (
     <Router>
-      <NavBar user={user} setUser={setUser}/>
+      <NavBar user={user} handleLogout={handleLogout} />
       <Routes>
-        <Route path="/" element={<Home  user={user}/>} />
-        <Route path="/signup" element={<Signup />}/>
-        <Route path="/login" element={<Login setUser={setUser}/>}/>
-        <Route path="/teachers" element={<TeachersList user={user}/>}/>
-        <Route path="/my-appointments" element={<MyAppointments user={user}/>}/>
-        <Route path="/profile" element={<StudentProfile user={user} setUser={setUser} />}/>
+        <Route path="/" element={<TeachersList user={user} />} /> {/* Teachers list at "/" */}
+        <Route path="/login" element={<Login setUser={setUser} />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<StudentDashboard user={user} />} /> {/* Student Dashboard */}
       </Routes>
     </Router>
   );

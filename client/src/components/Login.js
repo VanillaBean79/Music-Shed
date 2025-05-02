@@ -23,7 +23,7 @@ function Login ({ setUser }){
             if (r.ok) {
                 r.json().then((user)=> {
                     setUser(user)
-                    navigate("/my-appointments")
+                    navigate("/dashboard")
                 })
             } else {
                 r.json().then((err)=> setError(err.error || "Login failed"))
@@ -52,7 +52,7 @@ function Login ({ setUser }){
                 <button type="submit">Login</button>
             </form>
             {error && <p style={{ color: "red" }}>{error}</p>}
-            <button onClick={()=> navigate("/")}>Back to Home</button>
+            
         </div>
     )
 }

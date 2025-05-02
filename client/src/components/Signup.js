@@ -110,7 +110,7 @@ function Signup(){
                     <button type="submit">Submit</button>
                 </div>
             </form>
-            <button onClick={()=> navigate("/")}>Back to Home</button>
+            
         </div>
     )
 }
