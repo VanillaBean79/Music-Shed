@@ -23,3 +23,108 @@ body, html {
   text-align: center;
   padding: 20px;
 }
+
+
+nav {
+  background-color: var(--bg);
+  padding: 1em;
+  display: flex;
+  justify-content: center;
+  gap: 1.5em;
+  border-bottom: 1px solid #444;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+
+nav a {
+  color: var(--link);
+  text-decoration: none;
+  font-weight: bold;
+  padding: 0.5em 1em;
+  border: 1px solid var(--link);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+
+nav a:hover {
+  background-color: var(--link);
+  color: var(--bg);
+}
+
+
+nav button {
+  color: var(--link);
+  background: transparent;
+  border: 1px solid var(--link);
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+
+nav button:hover {
+  background-color: var(--link);
+  color: var(--bg);
+}
+
+
+/* Buttons (shared styles) */
+button, .nav-button {
+  color: var(--link);
+  background: transparent;
+  border: 1px solid var(--link);
+  padding: 0.5em 1em;
+  margin-top: 1em;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover, .nav-button:hover {
+  background-color: var(--link);
+  color: var(--bg);
+}
+
+/* Card layout */
+.card-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1.5em;
+  width: 100%;
+  max-width: 600px;
+}
+
+.card {
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-radius: 8px;
+  text-align: left;
+}
+
+/* Optional: special delete button style */
+.delete-button {
+  background-color: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+}
+
+.delete-button:hover {
+  background-color: #ff6b6b;
+  color: #000;
+}
+
+
+.logo {
+  font-size: 3rem;
+  color: var(--link);
+  margin-bottom: 0.5em;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+}

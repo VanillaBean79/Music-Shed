@@ -1,70 +1,143 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+# 🎵 Music Shed
 
-In the project directory, you can run:
+Music Shed is a full-stack web application that allows students to sign up, view available music teachers, and book lessons with them. Once signed up or logged in, a student can schedule, view, and delete appointments. The app is built with **React** (frontend), **Flask** (backend), and **SQLAlchemy** (ORM for PostgreSQL or SQLite).
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## ✨ Features
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Student signup & login system with password authentication.
+- View available teachers.
+- Book a lesson with a chosen teacher.
+- View scheduled appointments.
+- Delete an appointment.
+- Delete a student account.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📂 Project Structure
 
-### `npm run build`
+### 📁 `client/` (React Frontend)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### `App.js`
+- **Root component** that manages routing and user session.
+- `useEffect` checks for an active session via `/check_session`.
+- Uses React Router to switch between pages (`Home`, `Signup`, `Login`, `MyAppointments`).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### `Home.js`
+- Landing page with buttons to sign up or log in.
+- Navigation handled with `useNavigate`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### `Signup.js`
+- Form for new student registration.
+- Collects `username`, `password`, `name`, `age`, and `instrument`.
+- Sends a `POST` request to `/signup`.
 
-### `npm run eject`
+#### `Login.js`
+- Handles logging in existing students by verifying credentials.
+- Stores session on the backend via `/login`.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+#### `TeachersList.js`
+- Fetches available teachers from `/teachers`.
+- Renders list of teachers and lets students book appointments via `/appointments`.
+- `handleBookAppointment` sends `POST` with `student_id`, `teacher_id`, and `lesson_datetime`.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### `MyAppointments.js`
+- Fetches appointments for the logged-in student from `/students/:id/appointments`.
+- Allows deletion of appointments via `DELETE /appointments/:id`.
+- If no appointments exist, renders the `TeachersList` so the student can book one.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+#### `index.css`
+- Custom properties (`--bg`, `--text`, etc.) used for consistent theming.
+- Shared layout styles to center content on all pages using `.page-container`.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+---
 
-## Learn More
+### 📁 `server/` (Flask Backend)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+#### `app.py`
+- Initializes the Flask app, database (`db`), and RESTful API with Flask-RESTful.
+- Adds routes and resource mappings.
+- Defines the root route `/`.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### `models.py`
+Defines the database schema and logic:
 
-### Code Splitting
+- **Student**
+  - Fields: `username`, `password_hash`, `name`, `age`, `instrument`.
+  - Relationships: `appointments`, `teachers`.
+  - Methods: `set_password()`, `check_password()`.
+  - Validations ensure age > 5 and instrument name is not blank.
+  
+- **Teacher**
+  - Fields: `name`, `age`.
+  - Relationships: `students`, `appointments`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- **Appointment**
+  - Join table connecting `Student` and `Teacher`.
+  - Field: `lesson_datetime`.
 
-### Analyzing the Bundle Size
+#### `resources.py` (your route handlers)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+##### `/signup`
+- Handles new student creation and sets session cookie.
 
-### Making a Progressive Web App
+##### `/login`
+- Verifies login credentials and returns student data.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+##### `/logout`
+- Clears session on backend.
 
-### Advanced Configuration
+##### `/check_session`
+- Returns current student if a session exists.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+##### `/teachers`
+- Returns a list of available teachers.
 
-### Deployment
+##### `/appointments`
+- `GET`: Returns one or more appointments.
+- `POST`: Creates new appointment.
+- `DELETE`: Deletes appointment by ID.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+##### `/students/:id/appointments`
+- Returns a list of appointments for a specific student.
 
-### `npm run build` fails to minify
+##### `/students/:id`
+- `PATCH`: Updates a student’s info.
+- `DELETE`: Deletes the student account.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+## 📸 Screenshots (optional)
+
+Add screenshots like this using Markdown:
+```md
+![Signup Page](./screenshots/signup.png)
+```
+
+---
+
+## 🔗 Resources Used
+
+- [React](https://react.dev/)
+- [React Router](https://reactrouter.com/)
+- [Flask](https://flask.palletsprojects.com/)
+- [Flask-RESTful](https://flask-restful.readthedocs.io/)
+- [SQLAlchemy](https://docs.sqlalchemy.org/)
+- [Faker (for seeding)](https://faker.readthedocs.io/)
+- [Werkzeug Security](https://werkzeug.palletsprojects.com/en/2.3.x/utils/#werkzeug.security.generate_password_hash)
+
+---
+
+## ✅ Future Improvements
+
+- Students can select a specific date and time instead of defaulting to now.
+- Add teacher bios or profile images.
+- Authentication via JWTs.
+- Deploy to Render or Netlify/Heroku.
+
+---
+
+Would you like this saved as a `.md` file or copied into your project directory?

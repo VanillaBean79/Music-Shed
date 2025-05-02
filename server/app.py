@@ -71,7 +71,11 @@ class StudentByID(Resource):
 class TeacherList(Resource):
     def get(self):
         teachers = Teacher.query.all()
-        return [teacher.to_dict(rules=('-appointments', '-students')) for teacher in teachers], 200
+        return [teacher.to_dict(rules=('-appointments', 
+                                       "appointments.student",
+                                       "-appointments.teacher",
+                                       '-students'
+                                       )) for teacher in teachers], 200
     
     
     def post(self):
