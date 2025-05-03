@@ -39,7 +39,9 @@ function Signup(){
         })
         .then((r)=>{
             if (r.ok) {
-                navigate("/teachers")
+                navigate("/login", {
+                    state: { message: "Please login to set an appointment with a teacher."}
+                })
             } else {
                 return r.json().then((data) => {
                     console.error(data.error)

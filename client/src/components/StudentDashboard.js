@@ -66,6 +66,16 @@ function StudentDashboard({ user, setUser }) {
     });
   }
 
+  function handleUpdateAppointment(updatedAppointment) {
+    setAppointments((prevAppointments) =>
+      prevAppointments.map((appt) =>
+        appt.id === updatedAppointment.id ? updatedAppointment : appt
+      )
+    );
+  }
+  
+  
+
   return (
     <div className="page-container">
       <h2>Welcome, {user.username}</h2>
@@ -114,6 +124,7 @@ function StudentDashboard({ user, setUser }) {
                 key={appt.id}
                 appointment={appt}
                 onDelete={handleDeleteAppointment}
+                onUpdate={handleUpdateAppointment}
               />
             ))}
           </ul>

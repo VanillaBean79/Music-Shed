@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 
 function Login ({ setUser }){
@@ -7,7 +7,10 @@ function Login ({ setUser }){
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const navigate = useNavigate()
+    const location = useLocation()
 
+
+    const message = location.state?.message || ""
 
     function handleSubmit(e){
         e.preventDefault()
@@ -34,6 +37,8 @@ function Login ({ setUser }){
     return (
         <div className="page-container">
             <h2>Login</h2>
+            {/* Show message from signup redirect if present */}
+            {message && <p style={{ color: "green" }}>{message}</p>}
             <form onSubmit={handleSubmit}>
                 <input
                 type="text"
