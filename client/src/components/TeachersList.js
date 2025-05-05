@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function TeachersList({ user }) {
   const [teachers, setTeachers] = useState([]);
   const [appointmentTimes, setAppointmentTimes] = useState({});
+  const [visibleAppointments, setVisibleAppointments] = useState({});
+  const [appointmentsByTeacher, setAppointmentsByTeacher] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('/teachers')
+    fetch("/teachers")
       .then((r) => r.json())
       .then((data) => setTeachers(data));
   }, []);
@@ -49,12 +51,8 @@ function TeachersList({ user }) {
       .then((r) => {
         if (r.ok) {
           alert("Appointment booked successfully!");
-          // Refresh the appointments list
-          fetch(`/students/${user.id}/appointments`)
-            .then((r) => r.json())
-            .then((updatedAppointments) => {
-              // Update state or pass a callback
-            });
+          // Optionally reload appointments for that teacher
+          fetchTeacherAppointments(teacherId);
         } else {
           alert("Failed to book appointment.");
         }
@@ -65,6 +63,30 @@ function TeachersList({ user }) {
       });
   };
 
+  const fetchTeacherAppointments = (teacherId) => {
+    fetch(`/teachers/${teacherId}/appointments`)
+      .then((r) => r.json())
+      .then((data) => {
+        setAppointmentsByTeacher((prev) => ({
+          ...prev,
+          [teacherId]: data,
+        }));
+      });
+  };
+
+  const toggleAppointments = (teacherId) => {
+    const currentlyVisible = visibleAppointments[teacherId];
+
+    setVisibleAppointments((prev) => ({
+      ...prev,
+      [teacherId]: !currentlyVisible,
+    }));
+
+    if (!currentlyVisible && !appointmentsByTeacher[teacherId]) {
+      fetchTeacherAppointments(teacherId);
+    }
+  };
+
   return (
     <div className="page-container">
       <h2>Available Teachers</h2>
@@ -73,8 +95,8 @@ function TeachersList({ user }) {
       ) : (
         <ul>
           {teachers.map((teacher) => (
-            <li key={teacher.id}>
-              {teacher.name} (Age: {teacher.age})
+            <li key={teacher.id} style={{ marginBottom: "2rem" }}>
+              <strong>{teacher.name}</strong> (Age: {teacher.age})
               <div>
                 <input
                   type="datetime-local"
@@ -85,6 +107,24 @@ function TeachersList({ user }) {
                   Book Appointment
                 </button>
               </div>
+
+              <button onClick={() => toggleAppointments(teacher.id)} style={{ marginTop: "0.5rem" }}>
+                {visibleAppointments[teacher.id] ? "Hide Appointments" : "Show Appointments"}
+              </button>
+
+              {visibleAppointments[teacher.id] && (
+                <ul>
+                  {(appointmentsByTeacher[teacher.id] || []).map((appt) => (
+                    <li key={appt.id}>
+                      {new Date(appt.lesson_datetime).toLocaleString()} — Student:{" "}
+                      {appt.student?.name || "Unknown"}
+                    </li>
+                  ))}
+                  {(appointmentsByTeacher[teacher.id]?.length === 0) && (
+                    <li>No appointments scheduled.</li>
+                  )}
+                </ul>
+              )}
             </li>
           ))}
         </ul>

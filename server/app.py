@@ -223,10 +223,30 @@ class CheckSession(Resource):
     
     
     
+class TeacherAppointments(Resource):
+    def get(self, teacher_id):
+        teacher = Teacher.query.get(teacher_id)
+        if not teacher:
+            return {"error": "Teacher not found"}, 404
+
+        appointments = teacher.appointments
+        return [
+            appointment.to_dict(
+                rules=(
+                    '-student.appointments',
+                    '-teacher.appointments',
+                    'student',
+                )
+            )
+            for appointment in appointments
+        ], 200
+
+    
+    
     
 
 
-   
+api.add_resource(TeacherAppointments, '/teachers/<int:teacher_id>/appointments')   
 api.add_resource(StudentAppointments, '/students/<int:student_id>/appointments')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
