@@ -128,3 +128,36 @@ button:hover, .nav-button:hover {
   margin-bottom: 0.5em;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
+
+
+nav select {
+  color: var(--link);
+  background: transparent;
+  border: 1px solid var(--link);
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  appearance: none;
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+}
+
+nav select:hover {
+  background-color: var(--link);
+  color: var(--bg);
+}
+
+/* Optional: remove default dropdown arrow in WebKit browsers and add custom */
+nav select::-webkit-inner-spin-button,
+nav select::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Optional: better contrast for dropdown items */
+nav option {
+  background-color: var(--bg);
+  color: var(--text);
+}
+

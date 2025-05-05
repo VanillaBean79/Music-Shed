@@ -1,135 +1,129 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import AppointmentCard from "./AppointmentCard";
 
-function StudentDashboard({ user, setUser }) {
-  const [formData, setFormData] = useState({ name: "", age: "", instrument: "" });
+function StudentDashboard({ user }) {
+  const [teachers, setTeachers] = useState([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
+  const [lessonTime, setLessonTime] = useState("");
   const [appointments, setAppointments] = useState([]);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        age: user.age?.toString() || "",
-        instrument: user.instrument || "",
-      });
+    fetch("/teachers")
+      .then((res) => res.json())
+      .then(setTeachers);
 
-      fetch(`/students/${user.id}/appointments`)
-        .then((r) => r.json())
-        .then((data) => setAppointments(Array.isArray(data) ? data : []));
-    }
-  }, [user]);
+    fetch(`/students/${user.id}/appointments`)
+      .then((res) => res.json())
+      .then(setAppointments);
+  }, [user.id]);
 
-  if (!user) return <p>Please log in to view your dashboard.</p>;
+  const handleSchedule = () => {
+    if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    const ageInt = parseInt(formData.age, 10);
-
-    if (isNaN(ageInt) || ageInt < 5) {
-      setError("Age must be a number greater than 5.");
-      return;
-    }
-
-    fetch(`/students/${user.id}`, {
-      method: "PATCH",
+    fetch("/appointments", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, age: ageInt }),
+      body: JSON.stringify({
+        teacher_id: selectedTeacherId,
+        student_id: user.id,
+        lesson_datetime: lessonTime,
+      }),
     })
-      .then((r) => {
-        if (r.ok) {
-          return r.json().then((updatedUser) => {
-            setUser(updatedUser);
-            setError("");
+      .then((res) => {
+        if (res.ok) {
+          res.json().then((newAppt) => {
+            alert("Appointment scheduled!");
+            setAppointments((prev) => [...prev, newAppt]);
+            setSelectedTeacherId("");
+            setLessonTime("");
           });
         } else {
-          return r.json().then((data) => setError(data.error || "Update failed"));
+          res.json().then((err) => alert(err.error || "Failed to schedule."));
         }
-      })
-      .catch(() => setError("Network error"));
-  }
+      });
+  };
 
-  function handleDeleteAppointment(id) {
-    fetch(`/appointments/${id}`, { method: "DELETE" }).then((r) => {
-      if (r.ok) {
-        setAppointments((prev) => prev.filter((appt) => appt.id !== id));
+  const handleCancel = (appointmentId) => {
+    fetch(`/appointments/${appointmentId}`, {
+      method: "DELETE",
+    }).then((res) => {
+      if (res.ok) {
+        setAppointments((prev) => prev.filter((appt) => appt.id !== appointmentId));
       } else {
-        alert("Failed to delete appointment.");
+        alert("Failed to cancel appointment.");
       }
     });
-  }
+  };
 
-  function handleUpdateAppointment(updatedAppointment) {
-    setAppointments((prevAppointments) =>
-      prevAppointments.map((appt) =>
-        appt.id === updatedAppointment.id ? updatedAppointment : appt
-      )
-    );
-  }
-  
-  
+  const appointmentsByTeacher = appointments.reduce((acc, appt) => {
+    const teacherId = appt.teacher?.id;
+    if (!teacherId) return acc;
+
+    if (!acc[teacherId]) {
+      acc[teacherId] = {
+        teacher: appt.teacher,
+        appointments: [],
+      };
+    }
+    acc[teacherId].appointments.push(appt);
+    return acc;
+  }, {});
 
   return (
     <div className="page-container">
-      <h2>Welcome, {user.username}</h2>
+      <h2>Welcome, {user.name}!</h2>
 
-      <section>
-        <h3>Your Profile</h3>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Name"
-            required
-          />
-          <input
-            type="number"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-            placeholder="Age"
-            min="5"
-            required
-          />
-          <input
-            type="text"
-            name="instrument"
-            value={formData.instrument}
-            onChange={handleChange}
-            placeholder="Instrument"
-            required
-          />
-          <button type="submit">Update Profile</button>
-        </form>
-      </section>
+      <div>
+        <h3>Schedule a Lesson</h3>
+        <select
+          value={selectedTeacherId}
+          onChange={(e) => setSelectedTeacherId(e.target.value)}
+        >
+          <option value="">Select a teacher</option>
+          {teachers.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
 
-      <section style={{ marginTop: "2rem" }}>
-        <h3>Your Appointments</h3>
-        {appointments.length === 0 ? (
-          <p>No appointments scheduled.</p>
+        <input
+          type="datetime-local"
+          value={lessonTime}
+          onChange={(e) => setLessonTime(e.target.value)}
+          style={{ marginLeft: "1em" }}
+        />
+
+        <button onClick={handleSchedule} style={{ marginLeft: "1em" }}>
+          Schedule
+        </button>
+      </div>
+
+      <div style={{ marginTop: "2em" }}>
+        <h3>Your Scheduled Lessons</h3>
+        {Object.keys(appointmentsByTeacher).length === 0 ? (
+          <p>No appointments yet.</p>
         ) : (
-          <ul>
-            {appointments.map((appt) => (
-              <AppointmentCard
-                key={appt.id}
-                appointment={appt}
-                onDelete={handleDeleteAppointment}
-                onUpdate={handleUpdateAppointment}
-              />
+          <ul className="card-list">
+            {Object.values(appointmentsByTeacher).map(({ teacher, appointments }) => (
+              <li key={teacher.id} className="card">
+                <h4>{teacher.name}</h4>
+                <ul>
+                  {appointments.map((appt) => (
+                    <li key={appt.id} style={{ marginBottom: "0.5em" }}>
+                      {new Date(appt.lesson_datetime).toLocaleString()}
+                      <button
+                        onClick={() => handleCancel(appt.id)}
+                        className="delete-button"
+                        style={{ marginLeft: "1em" }}
+                      >
+                        Cancel
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </li>
             ))}
           </ul>
         )}
-      </section>
+      </div>
     </div>
   );
 }
