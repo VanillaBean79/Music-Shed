@@ -30,7 +30,7 @@ function StudentDashboard({ user }) {
   
     fetch(`/students/${user.id}/appointments`)
       .then((res) => res.json())
-      .then(setAppointments);
+      .then((data) => setAppointments(Array.isArray(data) ? data : []));
   }, [user]);
   
 
@@ -62,6 +62,24 @@ function StudentDashboard({ user }) {
         }
       });
   };
+
+  const handleDeleteAccount = ()=> {
+    if (!window.confirm("Are you sure you wnat to delete your account? This action cannot be undone.")){
+      return
+    }
+    fetch(`/students/${user.id}`, {
+      method: "DELETE",
+    })
+    .then((res)=> {
+      if (res.ok) {
+        alert("Account deleted.")
+        window.location.href = "/"
+      } else {
+        res.json().then((err)=>
+        alert(err.erro || "Failed to delete account."))
+      }
+    })
+  }
 
   const handleSchedule = () => {
     if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
@@ -100,7 +118,7 @@ function StudentDashboard({ user }) {
       }
     });
   };
-
+  
   const appointmentsByTeacher = appointments.reduce((acc, appt) => {
     const teacherId = appt.teacher?.id;
     if (!teacherId) return acc;
@@ -151,6 +169,12 @@ function StudentDashboard({ user }) {
             </button>
             <button onClick={() => setEditingProfile(false)} style={{ marginLeft: "0.5em" }}>
               Cancel
+            </button>
+            <button
+            onClick={handleDeleteAccount}
+            style={{ marginLeft: "0.5em", backgroundColor: "red", color: "white"}}
+            >
+              Delete Account
             </button>
           </div>
         ) : (
