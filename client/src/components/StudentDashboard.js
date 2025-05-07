@@ -1,20 +1,67 @@
 import React, { useState, useEffect } from "react";
 
 function StudentDashboard({ user }) {
+  
+
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [lessonTime, setLessonTime] = useState("");
   const [appointments, setAppointments] = useState([]);
 
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    age: "",
+    instrument: "",
+  });
+
   useEffect(() => {
+    if (!user) return;
+  
+    setProfileForm({
+      name: user.name,
+      age: user.age,
+      instrument: user.instrument,
+    });
+  
     fetch("/teachers")
       .then((res) => res.json())
       .then(setTeachers);
-
+  
     fetch(`/students/${user.id}/appointments`)
       .then((res) => res.json())
       .then(setAppointments);
-  }, [user.id]);
+  }, [user]);
+  
+
+  if (!user) return <p>Loading student dashboard...</p>;
+
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm((prev) => ({
+      ...prev,
+      [name]: name === "age" ? parseInt(value) || "" : value,
+    }));
+  };
+
+  const handleProfileSave = () => {
+    fetch(`/students/${user.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profileForm),
+    })
+      .then((res) => {
+        if (res.ok) {
+          res.json().then((updatedUser) => {
+            alert("Profile updated!");
+            setEditingProfile(false);
+          });
+        } else {
+          res.json().then((err) => alert(err.error || "Failed to update profile."));
+        }
+      });
+  };
 
   const handleSchedule = () => {
     if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
@@ -71,6 +118,50 @@ function StudentDashboard({ user }) {
   return (
     <div className="page-container">
       <h2>Welcome, {user.name}!</h2>
+
+      <div style={{ marginBottom: "2em" }}>
+        <h3>Your Profile</h3>
+        {editingProfile ? (
+          <div>
+            <input
+              type="text"
+              name="name"
+              placeholder="Name"
+              value={profileForm.name}
+              onChange={handleProfileChange}
+            />
+            <input
+              type="number"
+              name="age"
+              placeholder="Age"
+              value={profileForm.age}
+              onChange={handleProfileChange}
+              style={{ marginLeft: "1em" }}
+            />
+            <input
+              type="text"
+              name="instrument"
+              placeholder="Instrument"
+              value={profileForm.instrument}
+              onChange={handleProfileChange}
+              style={{ marginLeft: "1em" }}
+            />
+            <button onClick={handleProfileSave} style={{ marginLeft: "1em" }}>
+              Save
+            </button>
+            <button onClick={() => setEditingProfile(false)} style={{ marginLeft: "0.5em" }}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p><strong>Name:</strong> {user.name}</p>
+            <p><strong>Age:</strong> {user.age}</p>
+            <p><strong>Instrument:</strong> {user.instrument}</p>
+            <button onClick={() => setEditingProfile(true)}>Edit Profile</button>
+          </div>
+        )}
+      </div>
 
       <div>
         <h3>Schedule a Lesson</h3>

@@ -213,13 +213,18 @@ class CheckSession(Resource):
         if student_id:
             student = Student.query.get(student_id)
             if student:
-                return student.to_dict(), 200
-            else:
-                # Remove invalid session
-                session.pop('student_id', None)
-                return {'error': 'User not found'}, 404
-        
-        return {'error': 'Not logged in'}, 401
+                return student.to_dict(rules =(
+                    '-password_hash',
+                    '-teachers',
+                    '-appointments.student',
+                    '-appointments.teacher.appointments',
+                    '-appointments.teacher.students'
+                    )), 200
+                
+            session.pop('student_id', None)
+            return {'error': "User not found"}, 404
+            
+        return {'error': "Not logged in"}, 401
     
     
     
