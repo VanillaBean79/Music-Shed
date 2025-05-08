@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import { UserContext } from "./UserContext";
 
-function StudentDashboard({ user }) {
-  
+function StudentDashboard() {
+  const { user, teachers, setUser, loading } = useContext(UserContext);
 
-  const [teachers, setTeachers] = useState([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [lessonTime, setLessonTime] = useState("");
-  const [appointments, setAppointments] = useState([]);
-
   const [editingProfile, setEditingProfile] = useState(false);
+
   const [profileForm, setProfileForm] = useState({
     name: "",
     age: "",
@@ -17,25 +16,14 @@ function StudentDashboard({ user }) {
 
   useEffect(() => {
     if (!user) return;
-  
     setProfileForm({
       name: user.name,
       age: user.age,
       instrument: user.instrument,
     });
-  
-    fetch("/teachers")
-      .then((res) => res.json())
-      .then(setTeachers);
-  
-    fetch(`/students/${user.id}/appointments`)
-      .then((res) => res.json())
-      .then((data) => setAppointments(Array.isArray(data) ? data : []));
   }, [user]);
-  
 
-  if (!user) return <p>Loading student dashboard...</p>;
-
+  if (loading || !user) return <p>Loading student dashboard...</p>;
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -53,33 +41,29 @@ function StudentDashboard({ user }) {
     })
       .then((res) => {
         if (res.ok) {
-          res.json().then((updatedUser) => {
+          return res.json().then((data) => {
             alert("Profile updated!");
+            setUser(data); // update context
             setEditingProfile(false);
           });
         } else {
-          res.json().then((err) => alert(err.error || "Failed to update profile."));
+          return res.json().then((err) => alert(err.error || "Failed to update profile."));
         }
       });
   };
 
-  const handleDeleteAccount = ()=> {
-    if (!window.confirm("Are you sure you wnat to delete your account? This action cannot be undone.")){
-      return
-    }
-    fetch(`/students/${user.id}`, {
-      method: "DELETE",
-    })
-    .then((res)=> {
+  const handleDeleteAccount = () => {
+    if (!window.confirm("Are you sure you want to delete your account?")) return;
+
+    fetch(`/students/${user.id}`, { method: "DELETE" }).then((res) => {
       if (res.ok) {
-        alert("Account deleted.")
-        window.location.href = "/"
+        alert("Account deleted.");
+        window.location.href = "/";
       } else {
-        res.json().then((err)=>
-        alert(err.erro || "Failed to delete account."))
+        alert("Failed to delete account.");
       }
-    })
-  }
+    });
+  };
 
   const handleSchedule = () => {
     if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
@@ -97,9 +81,7 @@ function StudentDashboard({ user }) {
         if (res.ok) {
           res.json().then((newAppt) => {
             alert("Appointment scheduled!");
-            setAppointments((prev) => [...prev, newAppt]);
-            setSelectedTeacherId("");
-            setLessonTime("");
+            window.location.reload(); // or re-fetch context data if desired
           });
         } else {
           res.json().then((err) => alert(err.error || "Failed to schedule."));
@@ -112,31 +94,19 @@ function StudentDashboard({ user }) {
       method: "DELETE",
     }).then((res) => {
       if (res.ok) {
-        setAppointments((prev) => prev.filter((appt) => appt.id !== appointmentId));
+        alert("Appointment cancelled.");
+        window.location.reload(); // or re-fetch context data
       } else {
         alert("Failed to cancel appointment.");
       }
     });
   };
-  
-  const appointmentsByTeacher = appointments.reduce((acc, appt) => {
-    const teacherId = appt.teacher?.id;
-    if (!teacherId) return acc;
-
-    if (!acc[teacherId]) {
-      acc[teacherId] = {
-        teacher: appt.teacher,
-        appointments: [],
-      };
-    }
-    acc[teacherId].appointments.push(appt);
-    return acc;
-  }, {});
 
   return (
     <div className="page-container">
       <h2>Welcome, {user.name}!</h2>
 
+      {/* Profile Section */}
       <div style={{ marginBottom: "2em" }}>
         <h3>Your Profile</h3>
         {editingProfile ? (
@@ -144,14 +114,12 @@ function StudentDashboard({ user }) {
             <input
               type="text"
               name="name"
-              placeholder="Name"
               value={profileForm.name}
               onChange={handleProfileChange}
             />
             <input
               type="number"
               name="age"
-              placeholder="Age"
               value={profileForm.age}
               onChange={handleProfileChange}
               style={{ marginLeft: "1em" }}
@@ -159,7 +127,6 @@ function StudentDashboard({ user }) {
             <input
               type="text"
               name="instrument"
-              placeholder="Instrument"
               value={profileForm.instrument}
               onChange={handleProfileChange}
               style={{ marginLeft: "1em" }}
@@ -171,8 +138,8 @@ function StudentDashboard({ user }) {
               Cancel
             </button>
             <button
-            onClick={handleDeleteAccount}
-            style={{ marginLeft: "0.5em", backgroundColor: "red", color: "white"}}
+              onClick={handleDeleteAccount}
+              style={{ marginLeft: "0.5em", backgroundColor: "red", color: "white" }}
             >
               Delete Account
             </button>
@@ -187,6 +154,7 @@ function StudentDashboard({ user }) {
         )}
       </div>
 
+      {/* Schedule a Lesson */}
       <div>
         <h3>Schedule a Lesson</h3>
         <select
@@ -198,41 +166,39 @@ function StudentDashboard({ user }) {
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
-
         <input
           type="datetime-local"
           value={lessonTime}
           onChange={(e) => setLessonTime(e.target.value)}
           style={{ marginLeft: "1em" }}
         />
-
         <button onClick={handleSchedule} style={{ marginLeft: "1em" }}>
           Schedule
         </button>
       </div>
 
+      {/* Appointments by Teacher */}
       <div style={{ marginTop: "2em" }}>
         <h3>Your Scheduled Lessons</h3>
-        {Object.keys(appointmentsByTeacher).length === 0 ? (
+        {user.teachers.length === 0 ? (
           <p>No appointments yet.</p>
         ) : (
           <ul className="card-list">
-            {Object.values(appointmentsByTeacher).map(({ teacher, appointments }) => (
+            {user.teachers.map((teacher) => (
               <li key={teacher.id} className="card">
                 <h4>{teacher.name}</h4>
                 <ul>
-                  {appointments.map((appt) => (
-                    <li key={appt.id} style={{ marginBottom: "0.5em" }}>
+                {teacher.appointments
+                  .filter((appt) => appt.student_id === user.id)
+                  .map((appt) => (
+                    <li key={appt.id}>
                       {new Date(appt.lesson_datetime).toLocaleString()}
-                      <button
-                        onClick={() => handleCancel(appt.id)}
-                        className="delete-button"
-                        style={{ marginLeft: "1em" }}
-                      >
-                        Cancel
+                      <button onClick={() => handleCancel(appt.id)} style={{ marginLeft: "1em" }}>
+                         Cancel
                       </button>
                     </li>
                   ))}
+
                 </ul>
               </li>
             ))}
@@ -244,3 +210,4 @@ function StudentDashboard({ user }) {
 }
 
 export default StudentDashboard;
+

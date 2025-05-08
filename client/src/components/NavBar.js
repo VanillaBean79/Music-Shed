@@ -1,12 +1,23 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { UserContext } from "./UserContext";
 
-function NavBar({ user, handleLogout }) {
+function NavBar() {
   const navigate = useNavigate();
-  
+  const { user, setUser } = useContext(UserContext);
+
+  const handleLogout = () => {
+    fetch("/logout", {
+      method: "DELETE",
+    }).then(() => {
+      setUser(null);
+      navigate("/");
+    });
+  };
 
   return (
     <nav style={{ padding: "1em", borderBottom: "1px solid #ccc" }}>
-      <NavLink to="/" style={{ marginRight: "1em" }}>Home</NavLink> {/* Teachers list on "/" */}
+      <NavLink to="/" style={{ marginRight: "1em" }}>Home</NavLink>
       {user ? (
         <>
           <NavLink to="/dashboard" style={{ marginRight: "1em" }}>Dashboard</NavLink>
@@ -23,3 +34,4 @@ function NavBar({ user, handleLogout }) {
 }
 
 export default NavBar;
+

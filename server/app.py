@@ -209,22 +209,60 @@ class Logout(Resource):
 class CheckSession(Resource):
     def get(self):
         student_id = session.get('student_id')
-        
-        if student_id:
-            student = Student.query.get(student_id)
-            if student:
-                return student.to_dict(rules =(
-                    '-password_hash',
-                    '-teachers',
-                    '-appointments.student',
-                    '-appointments.teacher.appointments',
-                    '-appointments.teacher.students'
-                    )), 200
-                
+
+        if not student_id:
+            return {'error': "Not logged in"}, 401
+
+        student = Student.query.get(student_id)
+        if not student:
             session.pop('student_id', None)
             return {'error': "User not found"}, 404
-            
-        return {'error': "Not logged in"}, 401
+
+        # Build teachers data with ordered keys and nested appointments
+        teachers_data = []
+        for teacher in student.teachers:
+            appointments = Appointment.query.filter_by(student_id=student_id, teacher_id=teacher.id).all()
+
+            appointments_data = []
+            for appt in appointments:
+                appointments_data.append({
+                    "id": appt.id,
+                    "lesson_datetime": appt.lesson_datetime.isoformat(sep=' '),
+                    "student_id": appt.student_id,
+                    "teacher_id": appt.teacher_id,
+                    "teacher": {
+                        "id": teacher.id,
+                        "name": teacher.name,
+                        "age": teacher.age
+                    },
+                    "student": {
+                        "id": student.id,
+                        "name": student.name,
+                        "age": student.age,
+                        "instrument": student.instrument
+                    }
+                })
+
+            teachers_data.append({
+                "id": teacher.id,
+                "name": teacher.name,
+                "age": teacher.age,
+                "appointments": appointments_data
+            })
+
+        # Return final student data
+        return {
+            "id": student.id,
+            "name": student.name,
+            "age": student.age,
+            "instrument": student.instrument,
+            "teachers": teachers_data
+        }, 200
+
+
+
+
+
     
     
     
