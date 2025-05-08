@@ -8,6 +8,9 @@ function StudentDashboard() {
   const [lessonTime, setLessonTime] = useState("");
   const [editingProfile, setEditingProfile] = useState(false);
 
+  const [editingApptId, setEditingApptId] = useState(null);
+  const [newLessonTime, setNewLessonTime] = useState("");
+
   const [profileForm, setProfileForm] = useState({
     name: "",
     age: "",
@@ -39,17 +42,15 @@ function StudentDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profileForm),
     })
-      .then((res) => {
-        if (res.ok) {
-          return res.json().then((data) => {
-            alert("Profile updated!");
-            setUser(data); // update context
-            setEditingProfile(false);
-          });
-        } else {
-          return res.json().then((err) => alert(err.error || "Failed to update profile."));
-        }
-      });
+      .then((res) =>
+        res.ok
+          ? res.json().then((data) => {
+              alert("Profile updated!");
+              setUser(data);
+              setEditingProfile(false);
+            })
+          : res.json().then((err) => alert(err.error || "Failed to update profile."))
+      );
   };
 
   const handleDeleteAccount = () => {
@@ -76,17 +77,16 @@ function StudentDashboard() {
         student_id: user.id,
         lesson_datetime: lessonTime,
       }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          res.json().then((newAppt) => {
-            alert("Appointment scheduled!");
-            window.location.reload(); // or re-fetch context data if desired
-          });
-        } else {
-          res.json().then((err) => alert(err.error || "Failed to schedule."));
-        }
-      });
+    }).then((res) => {
+      if (res.ok) {
+        res.json().then(() => {
+          alert("Appointment scheduled!");
+          window.location.reload();
+        });
+      } else {
+        res.json().then((err) => alert(err.error || "Failed to schedule."));
+      }
+    });
   };
 
   const handleCancel = (appointmentId) => {
@@ -95,9 +95,26 @@ function StudentDashboard() {
     }).then((res) => {
       if (res.ok) {
         alert("Appointment cancelled.");
-        window.location.reload(); // or re-fetch context data
+        window.location.reload();
       } else {
         alert("Failed to cancel appointment.");
+      }
+    });
+  };
+
+  const handleUpdate = (appointmentId) => {
+    if (!newLessonTime) return alert("Please choose a new time");
+
+    fetch(`/appointments/${appointmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lesson_datetime: newLessonTime }),
+    }).then((res) => {
+      if (res.ok) {
+        alert("Appointment updated.");
+        window.location.reload();
+      } else {
+        res.json().then((err) => alert(err.error || "Update failed."));
       }
     });
   };
@@ -111,38 +128,12 @@ function StudentDashboard() {
         <h3>Your Profile</h3>
         {editingProfile ? (
           <div>
-            <input
-              type="text"
-              name="name"
-              value={profileForm.name}
-              onChange={handleProfileChange}
-            />
-            <input
-              type="number"
-              name="age"
-              value={profileForm.age}
-              onChange={handleProfileChange}
-              style={{ marginLeft: "1em" }}
-            />
-            <input
-              type="text"
-              name="instrument"
-              value={profileForm.instrument}
-              onChange={handleProfileChange}
-              style={{ marginLeft: "1em" }}
-            />
-            <button onClick={handleProfileSave} style={{ marginLeft: "1em" }}>
-              Save
-            </button>
-            <button onClick={() => setEditingProfile(false)} style={{ marginLeft: "0.5em" }}>
-              Cancel
-            </button>
-            <button
-              onClick={handleDeleteAccount}
-              style={{ marginLeft: "0.5em", backgroundColor: "red", color: "white" }}
-            >
-              Delete Account
-            </button>
+            <input type="text" name="name" value={profileForm.name} onChange={handleProfileChange} />
+            <input type="number" name="age" value={profileForm.age} onChange={handleProfileChange} style={{ marginLeft: "1em" }} />
+            <input type="text" name="instrument" value={profileForm.instrument} onChange={handleProfileChange} style={{ marginLeft: "1em" }} />
+            <button onClick={handleProfileSave} style={{ marginLeft: "1em" }}>Save</button>
+            <button onClick={() => setEditingProfile(false)} style={{ marginLeft: "0.5em" }}>Cancel</button>
+            <button onClick={handleDeleteAccount} style={{ marginLeft: "0.5em", backgroundColor: "red", color: "white" }}>Delete Account</button>
           </div>
         ) : (
           <div>
@@ -157,10 +148,7 @@ function StudentDashboard() {
       {/* Schedule a Lesson */}
       <div>
         <h3>Schedule a Lesson</h3>
-        <select
-          value={selectedTeacherId}
-          onChange={(e) => setSelectedTeacherId(e.target.value)}
-        >
+        <select value={selectedTeacherId} onChange={(e) => setSelectedTeacherId(e.target.value)}>
           <option value="">Select a teacher</option>
           {teachers.map((t) => (
             <option key={t.id} value={t.id}>{t.name}</option>
@@ -188,17 +176,43 @@ function StudentDashboard() {
               <li key={teacher.id} className="card">
                 <h4>{teacher.name}</h4>
                 <ul>
-                {teacher.appointments
-                  .filter((appt) => appt.student_id === user.id)
-                  .map((appt) => (
-                    <li key={appt.id}>
-                      {new Date(appt.lesson_datetime).toLocaleString()}
-                      <button onClick={() => handleCancel(appt.id)} style={{ marginLeft: "1em" }}>
-                         Cancel
-                      </button>
-                    </li>
-                  ))}
-
+                  {teacher.appointments
+                    .filter((appt) => appt.student_id === user.id)
+                    .map((appt) => (
+                      <li key={appt.id}>
+                        {editingApptId === appt.id ? (
+                          <>
+                            <input
+                              type="datetime-local"
+                              value={newLessonTime}
+                              onChange={(e) => setNewLessonTime(e.target.value)}
+                            />
+                            <button onClick={() => handleUpdate(appt.id)} style={{ marginLeft: "0.5em" }}>
+                              Save
+                            </button>
+                            <button onClick={() => setEditingApptId(null)} style={{ marginLeft: "0.5em" }}>
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {new Date(appt.lesson_datetime).toLocaleString()}
+                            <button onClick={() => handleCancel(appt.id)} style={{ marginLeft: "1em" }}>
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingApptId(appt.id);
+                                setNewLessonTime(appt.lesson_datetime.slice(0, 16));
+                              }}
+                              style={{ marginLeft: "0.5em" }}
+                            >
+                              Edit
+                            </button>
+                          </>
+                        )}
+                      </li>
+                    ))}
                 </ul>
               </li>
             ))}
@@ -210,4 +224,3 @@ function StudentDashboard() {
 }
 
 export default StudentDashboard;
-

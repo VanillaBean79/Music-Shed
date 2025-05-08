@@ -121,36 +121,38 @@ class AppointmentByID(Resource):
         
         
     def patch(self, id):
-        
         appointment = Appointment.query.get(id)
+        student_id = session.get('student_id')
+
         if not appointment:
-            return {"message": "Appointment not found"}
-        
+            return {"error": "Appointment not found"}, 404
+
+        if appointment.student_id != student_id:
+            return {"error": "Unauthorized"}, 403
+
         data = request.get_json()
-        
-        if 'cost' in data:
-            appointment.cost = data['cost']
-        if 'duration' in data:
-            appointment.duration = data['duration']
         if 'lesson_datetime' in data:
             appointment.lesson_datetime = datetime.fromisoformat(data['lesson_datetime'])
-        
+
         db.session.commit()
-        
         return appointment.to_dict(), 200
+
     
     
     def delete(self, id):
-        
         appointment = Appointment.query.get(id)
-        
+        student_id = session.get('student_id')
+
         if not appointment:
-            return {"message": "Appointment not found."}
-        
+            return {"error": "Appointment not found"}, 404
+
+        if appointment.student_id != student_id:
+            return {"error": "Unauthorized"}, 403
+
         db.session.delete(appointment)
         db.session.commit()
-        
         return {"message": f"Appointment {id} deleted."}, 200
+
 
 
 class StudentAppointments(Resource):
