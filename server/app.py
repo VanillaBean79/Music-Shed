@@ -229,19 +229,9 @@ class CheckSession(Resource):
                     "id": appt.id,
                     "lesson_datetime": appt.lesson_datetime.isoformat(sep=' '),
                     "student_id": appt.student_id,
-                    "teacher_id": appt.teacher_id,
-                    "teacher": {
-                        "id": teacher.id,
-                        "name": teacher.name,
-                        "age": teacher.age
-                    },
-                    "student": {
-                        "id": student.id,
-                        "name": student.name,
-                        "age": student.age,
-                        "instrument": student.instrument
-                    }
+                    "teacher_id": appt.teacher_id
                 })
+
 
             teachers_data.append({
                 "id": teacher.id,
