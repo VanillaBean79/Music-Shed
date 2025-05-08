@@ -68,7 +68,7 @@ function StudentDashboard() {
 
   const handleSchedule = () => {
     if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
-
+  
     fetch("/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -77,17 +77,34 @@ function StudentDashboard() {
         student_id: user.id,
         lesson_datetime: lessonTime,
       }),
-    }).then((res) => {
-      if (res.ok) {
-        res.json().then(() => {
-          alert("Appointment scheduled!");
-          window.location.reload();
-        });
-      } else {
-        res.json().then((err) => alert(err.error || "Failed to schedule."));
-      }
-    });
+    })
+      .then((res) => {
+        if (res.ok) {
+          res.json().then((newAppt) => {
+            alert("Appointment scheduled!");
+  
+            // Find teacher
+            const updatedTeachers = [...user.teachers];
+            const teacherIndex = updatedTeachers.findIndex((t) => t.id === newAppt.teacher_id);
+            
+            if (teacherIndex !== -1) {
+              updatedTeachers[teacherIndex].appointments.push(newAppt);
+            } else {
+              // If teacher not in user's list yet, add them
+              const teacher = teachers.find((t) => t.id === newAppt.teacher_id);
+              updatedTeachers.push({ ...teacher, appointments: [newAppt] });
+            }
+  
+            setUser({ ...user, teachers: updatedTeachers });
+            setSelectedTeacherId("");
+            setLessonTime("");
+          });
+        } else {
+          res.json().then((err) => alert(err.error || "Failed to schedule."));
+        }
+      });
   };
+  
 
   const handleCancel = (appointmentId) => {
     fetch(`/appointments/${appointmentId}`, {
