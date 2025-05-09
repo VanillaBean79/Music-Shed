@@ -17,6 +17,8 @@ function StudentDashboard() {
     instrument: "",
   });
 
+  const [newTeacherForm, setNewTeacherForm] = useState({ name: "", age: ""})
+
   useEffect(() => {
     if (!user) return;
     setProfileForm({
@@ -136,6 +138,33 @@ function StudentDashboard() {
     });
   };
 
+
+  const handleCreateTeacher = ()=>{
+    if (!newTeacherForm.name || !newTeacherForm.age) 
+      return alert("Please fill out both fields.")
+
+    fetch("/teachers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json"},
+      body: JSON.stringify({
+        name: newTeacherForm.name,
+        age: parseInt(newTeacherForm.age),
+      }),
+    })
+    .then((res)=>{
+      if (res.ok) {
+        res.json().then((newTeacher)=> {
+          alert("Teacher created!")
+          setNewTeacherForm({ name:"", age: ""})
+
+          const updatedTeacher = [...teachers, newTeacher]
+        })
+      } else {
+        res.json().then((err)=> alert(err.error)|| "Failed to create teacher.")
+      }
+    })
+  }
+
   return (
     <div className="page-container">
       <h2>Welcome, {user.name}!</h2>
@@ -181,6 +210,25 @@ function StudentDashboard() {
           Schedule
         </button>
       </div>
+
+      <div style={{ marginTop: "2em"}}>
+        <h3>Create a New Teacher</h3>
+        <input
+        type="text"
+        placeholder="Name"
+        value={newTeacherForm.name}
+        onChange={(e)=> setNewTeacherForm({...newTeacherForm, name: e.target.value})}/>
+        <input
+        type="number"
+        placeholder="Age"
+        value={newTeacherForm.age}
+        onChange={(e)=> setNewTeacherForm({...newTeacherForm, age: e.target.value})}
+        style={{ marginLeft: "1em"}}
+        />
+        <button onClick={handleCreateTeacher} style={{ marginLeft:"1em"}}>
+          Add Teacher
+        </button>
+       </div>
 
       {/* Appointments by Teacher */}
       <div style={{ marginTop: "2em" }}>
