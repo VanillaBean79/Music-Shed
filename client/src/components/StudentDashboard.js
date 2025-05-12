@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
+import { useNavigate } from "react-router-dom"
 
 function StudentDashboard() {
   const { user, teachers, setUser, setTeachers, loading } = useContext(UserContext);
@@ -18,6 +19,7 @@ function StudentDashboard() {
   });
 
   const [newTeacherForm, setNewTeacherForm] = useState({ name: "", age: ""})
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!user) return;
@@ -61,7 +63,8 @@ function StudentDashboard() {
     fetch(`/students/${user.id}`, { method: "DELETE" }).then((res) => {
       if (res.ok) {
         alert("Account deleted.");
-        window.location.href = "/";
+        navigate("/");
+        // navigate will prevent an unnecessary page reload. 
       } else {
         alert("Failed to delete account.");
       }

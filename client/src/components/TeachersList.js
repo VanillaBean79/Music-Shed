@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "./UserContext"; // update path if needed
 
-function TeachersList({ user }) {
+function TeachersList() {
+  const { user, setUser } = useContext(UserContext);
   const [teachers, setTeachers] = useState([]);
   const [appointmentTimes, setAppointmentTimes] = useState({});
   const navigate = useNavigate();
@@ -22,23 +24,23 @@ function TeachersList({ user }) {
   const handleBookAppointment = (teacherId) => {
     const studentId = user?.id;
     const selectedTime = appointmentTimes[teacherId];
-
+  
     if (!studentId) {
       alert("You must be logged in to book an appointment.");
       return;
     }
-
+  
     if (!selectedTime) {
       alert("Please choose a date and time.");
       return;
     }
-
+  
     const appointmentData = {
       student_id: studentId,
       teacher_id: teacherId,
       lesson_datetime: new Date(selectedTime).toISOString(),
     };
-
+  
     fetch("/appointments", {
       method: "POST",
       headers: {
@@ -46,24 +48,32 @@ function TeachersList({ user }) {
       },
       body: JSON.stringify(appointmentData),
     })
-      .then((r) => {
-        if (r.ok) {
-          alert("Appointment booked successfully!");
-          // Refresh the appointments list
-          fetch(`/students/${user.id}/appointments`)
-            .then((r) => r.json())
-            .then((updatedAppointments) => {
-              // Update state or pass a callback
-            });
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to book appointment.");
+        return res.json();
+      })
+      .then((newAppt) => {
+        alert("Appointment booked successfully!");
+  
+        const teacher = teachers.find((t) => t.id === newAppt.teacher_id);
+  
+        const updatedTeachers = [...user.teachers];
+        const teacherIndex = updatedTeachers.findIndex((t) => t.id === teacher.id);
+  
+        if (teacherIndex !== -1) {
+          updatedTeachers[teacherIndex].appointments.push(newAppt);
         } else {
-          alert("Failed to book appointment.");
+          updatedTeachers.push({ ...teacher, appointments: [newAppt] });
         }
+  
+        setUser({ ...user, teachers: updatedTeachers });
       })
       .catch((error) => {
         console.error("Error booking appointment:", error);
         alert("Error booking appointment");
       });
   };
+  
 
   return (
     <div className="page-container">
