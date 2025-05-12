@@ -18,7 +18,7 @@ function Signup(){
         const ageInt = parseInt(age,10)
 
         if (isNaN(ageInt) || ageInt < 5) {
-            setError("Age must be a nuber greater than 5.")
+            setError("Age must be a number greater than 5.")
             return
         }
 
@@ -81,7 +81,7 @@ function Signup(){
                 <div>
                     <label>Name</label>
                     <input
-                    type="name"
+                    type="text" name="name"
                     value={name}
                     onChange={(e)=> setName(e.target.value)}
                     required
@@ -91,7 +91,7 @@ function Signup(){
                 <div>
                     <label>Age</label>
                     <input
-                    type="age"
+                    type="number" name="age"
                     value={age}
                     onChange={(e)=> setAge(e.target.value)}
                     required
@@ -101,7 +101,7 @@ function Signup(){
                 <div>
                     <label>Instrument</label>
                     <input
-                    type="instrument"
+                    type="text" name="instrument"
                     value={instrument}
                     onChange={(e)=> setInstrument(e.target.value)}
                     required

@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
 
 function StudentDashboard() {
-  const { user, teachers, setUser, loading } = useContext(UserContext);
+  const { user, teachers, setUser, setTeachers, loading } = useContext(UserContext);
 
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [lessonTime, setLessonTime] = useState("");
@@ -114,7 +114,12 @@ function StudentDashboard() {
     }).then((res) => {
       if (res.ok) {
         alert("Appointment cancelled.");
-        window.location.reload();
+        
+        fetch(`/check_session`)
+        .then((r)=> r.json())
+        .then((updatedUser) => {
+          setUser(updatedUser)
+        })
       } else {
         alert("Failed to cancel appointment.");
       }
@@ -131,7 +136,14 @@ function StudentDashboard() {
     }).then((res) => {
       if (res.ok) {
         alert("Appointment updated.");
-        window.location.reload();
+        
+
+        fetch(`/check_session`)
+        .then((r)=> r.json())
+        .then((updatedUser)=>{
+          setUser(updatedUser)
+          setEditingApptId(null)
+        })
       } else {
         res.json().then((err) => alert(err.error || "Update failed."));
       }
@@ -157,7 +169,7 @@ function StudentDashboard() {
           alert("Teacher created!")
           setNewTeacherForm({ name:"", age: ""})
 
-          const updatedTeacher = [...teachers, newTeacher]
+          setTeachers([...teachers, newTeacher])
         })
       } else {
         res.json().then((err)=> alert(err.error)|| "Failed to create teacher.")
