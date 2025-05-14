@@ -5,6 +5,7 @@ export const UserContext = createContext();
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [teachers, setTeachers] = useState([]);
+  const [userTeachers, setUserTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,7 +13,12 @@ export function UserProvider({ children }) {
     fetch("/check_session")
       .then((res) => {
         if (res.ok) {
-          return res.json().then((data) => setUser(data));
+          return res.json().then((data) => {
+            setUser(data);
+            if (data.teachers) {
+              setUserTeachers(data.teachers);
+            }
+          });
         }
       })
       .catch(console.error);
@@ -26,7 +32,17 @@ export function UserProvider({ children }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, teachers, setTeachers, loading }}>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        teachers,
+        setTeachers,
+        userTeachers,
+        setUserTeachers,
+        loading,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

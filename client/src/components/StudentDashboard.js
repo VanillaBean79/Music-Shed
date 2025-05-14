@@ -72,8 +72,8 @@ function StudentDashboard() {
   };
 
   const handleSchedule = () => {
+    // VALIDATION: Ensures that both selected teacher and lesson time are set.
     if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
-  
     fetch("/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -111,46 +111,72 @@ function StudentDashboard() {
   };
   
 
-  const handleCancel = (appointmentId) => {
+  const handleCancel = (appointmentId, teacherId) => {
     fetch(`/appointments/${appointmentId}`, {
       method: "DELETE",
-    }).then((res) => {
-      if (res.ok) {
-        alert("Appointment cancelled.");
-        
-        fetch(`/check_session`)
-        .then((r)=> r.json())
-        .then((updatedUser) => {
-          setUser(updatedUser)
-        })
-      } else {
-        alert("Failed to cancel appointment.");
+    })
+    .then((res)=>{
+      if (!res.ok) throw new Error("Failed to cancel appoinment")
+        return res.json()
+    })
+    .then(()=>{
+      alert("Appointment cancelled!")
+
+      // Create a shallow copy of the user's teachers
+      const updatedTeachers = [...user.teachers]
+      // Find the teacher who owns this appointment.
+      const teacherIndex = updatedTeachers.findIndex((t)=> t.id === teacherId)
+
+      if (teacherIndex !== -1) {
+        // Filter out the cancelled appointment
+        updatedTeachers[teacherIndex].appointments = 
+        updatedTeachers[teacherIndex].appointments.filter((appt)=> appt.id !== appointmentId)
       }
-    });
-  };
+      // Update the context user object with the modified teachers list
+      setUser({...user, teachers: updatedTeachers })
+    })
+    .catch((err)=> {
+      console.error("Cancel error:", err)
+      alert("Failed to cancel appointment")
+    })
+  }
+  
 
   const handleUpdate = (appointmentId) => {
-    if (!newLessonTime) return alert("Please choose a new time");
+    if (!newLessonTime) return alert("Please choose a new time.")
 
-    fetch(`/appointments/${appointmentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lesson_datetime: newLessonTime }),
-    }).then((res) => {
-      if (res.ok) {
-        alert("Appointment updated.");
-        
+      fetch(`/appointments/${appointmentId}`, {
+        method: "POST",
+        headers: {"Content-type": "application/json"},
+        body: JSON.stringify({ lesson_datetime: newLessonTime }),
+      })
+      .then((res)=>{
+        if (!res.ok) throw new Error("Update failed.")
+          return res.json()
+      })
+      .then((updatedAppt)=>{
+        alert("Appointment updated!")
 
-        fetch(`/check_session`)
-        .then((r)=> r.json())
-        .then((updatedUser)=>{
-          setUser(updatedUser)
-          setEditingApptId(null)
-        })
-      } else {
-        res.json().then((err) => alert(err.error || "Update failed."));
-      }
-    });
+        const updatedTeachers = [...user.teachers]
+        const teacherIndex = updatedTeachers.findIndex((t) => t.id === updatedAppt.teacher_id)
+
+        if (teacherIndex !== -1) {
+
+          updatedTeachers[teacherIndex].appointments = 
+          updatedTeachers[teacherIndex].appointments.map((appt)=>
+            appt === updatedAppt.id ? updatedAppt : appt
+          )
+        }
+
+        setUser({...user, teachers: updatedTeachers })
+
+        // Clear editing state
+        setEditingApptId(null)
+      })
+      .catch((error)=>{
+        console.error("Error updating appointment", error)
+        alert("Appointment not updated.")
+      })
   };
 
 
