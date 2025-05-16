@@ -1,78 +1,21 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { UserContext } from "./UserContext";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 
 function StudentDashboard() {
   const { user, teachers, setUser, setTeachers, loading } = useContext(UserContext);
 
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [lessonTime, setLessonTime] = useState("");
-  const [editingProfile, setEditingProfile] = useState(false);
-
   const [editingApptId, setEditingApptId] = useState(null);
   const [newLessonTime, setNewLessonTime] = useState("");
+  const [newTeacherForm, setNewTeacherForm] = useState({ name: "", age: "" });
 
-  const [profileForm, setProfileForm] = useState({
-    name: "",
-    age: "",
-    instrument: "",
-  });
-
-  const [newTeacherForm, setNewTeacherForm] = useState({ name: "", age: ""})
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!user) return;
-    setProfileForm({
-      name: user.name,
-      age: user.age,
-      instrument: user.instrument,
-    });
-  }, [user]);
+  const navigate = useNavigate();
 
   if (loading || !user) return <p>Loading student dashboard...</p>;
 
-  const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    setProfileForm((prev) => ({
-      ...prev,
-      [name]: name === "age" ? parseInt(value) || "" : value,
-    }));
-  };
-
-  const handleProfileSave = () => {
-    fetch(`/students/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profileForm),
-    })
-      .then((res) =>
-        res.ok
-          ? res.json().then((data) => {
-              alert("Profile updated!");
-              setUser(data);
-              setEditingProfile(false);
-            })
-          : res.json().then((err) => alert(err.error || "Failed to update profile."))
-      );
-  };
-
-  const handleDeleteAccount = () => {
-    if (!window.confirm("Are you sure you want to delete your account?")) return;
-
-    fetch(`/students/${user.id}`, { method: "DELETE" }).then((res) => {
-      if (res.ok) {
-        alert("Account deleted.");
-        navigate("/");
-        // navigate will prevent an unnecessary page reload. 
-      } else {
-        alert("Failed to delete account.");
-      }
-    });
-  };
-
   const handleSchedule = () => {
-    // VALIDATION: Ensures that both selected teacher and lesson time are set.
     if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
     fetch("/appointments", {
       method: "POST",
@@ -87,19 +30,16 @@ function StudentDashboard() {
         if (res.ok) {
           res.json().then((newAppt) => {
             alert("Appointment scheduled!");
-  
-            // Find teacher
             const updatedTeachers = [...user.teachers];
             const teacherIndex = updatedTeachers.findIndex((t) => t.id === newAppt.teacher_id);
-            
+
             if (teacherIndex !== -1) {
               updatedTeachers[teacherIndex].appointments.push(newAppt);
             } else {
-              // If teacher not in user's list yet, add them
               const teacher = teachers.find((t) => t.id === newAppt.teacher_id);
               updatedTeachers.push({ ...teacher, appointments: [newAppt] });
             }
-  
+
             setUser({ ...user, teachers: updatedTeachers });
             setSelectedTeacherId("");
             setLessonTime("");
@@ -109,132 +49,102 @@ function StudentDashboard() {
         }
       });
   };
-  
 
   const handleCancel = (appointmentId, teacherId) => {
     fetch(`/appointments/${appointmentId}`, {
       method: "DELETE",
     })
-    .then((res)=>{
-      if (!res.ok) throw new Error("Failed to cancel appoinment")
-        return res.json()
-    })
-    .then(()=>{
-      alert("Appointment cancelled!")
-
-      
-      const updatedTeachers = [...user.teachers]
-      const teacherIndex = updatedTeachers.findIndex((t)=> t.id === teacherId)
-      // const updatedTeacher = updatedTeachers.find((t)=> t.id === teacherId)
-      // if (updatedTeacher) {
-      // updatedTeacher.appointments = updatedTeacher.appointments.filter((appt)=> appt.id !== appointmentId)
-      // const updatedTeachers = user.teachers.map((t)=> t.id === teacherId ? updatedTeacher : t)
-      // }
-      if (teacherIndex !== -1) {
-        updatedTeachers[teacherIndex].appointments = 
-        updatedTeachers[teacherIndex].appointments.filter((appt)=> appt.id !== appointmentId)
-        
-      }
-
-      const cleanedTeachers = updatedTeachers.filter((t)=> t.appointments && 
-    t.appointments.length > 0)
-      setUser({...user, teachers: cleanedTeachers })
-    })
-    .catch((err)=> {
-      console.error("Cancel error:", err)
-      alert("Failed to cancel appointment")
-    })
-  }
-  
-
-  const handleUpdate = (appointmentId) => {
-    if (!newLessonTime) return alert("Please choose a new time.")
-
-      fetch(`/appointments/${appointmentId}`, {
-        method: "POST",
-        headers: {"Content-type": "application/json"},
-        body: JSON.stringify({ lesson_datetime: newLessonTime }),
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to cancel appointment");
+        return res.json();
       })
-      .then((res)=>{
-        if (!res.ok) throw new Error("Update failed.")
-          return res.json()
-      })
-      .then((updatedAppt)=>{
-        alert("Appointment updated!")
-
-        const updatedTeachers = [...user.teachers]
-        const teacherIndex = updatedTeachers.findIndex((t) => t.id === updatedAppt.teacher_id)
+      .then(() => {
+        alert("Appointment cancelled!");
+        const updatedTeachers = [...user.teachers];
+        const teacherIndex = updatedTeachers.findIndex((t) => t.id === teacherId);
 
         if (teacherIndex !== -1) {
-
-          updatedTeachers[teacherIndex].appointments = 
-          updatedTeachers[teacherIndex].appointments.map((appt)=>
-            appt === updatedAppt.id ? updatedAppt : appt
-          )
+          updatedTeachers[teacherIndex].appointments = updatedTeachers[teacherIndex].appointments.filter(
+            (appt) => appt.id !== appointmentId
+          );
         }
 
-        setUser({...user, teachers: updatedTeachers })
-
-        // Clear editing state
-        setEditingApptId(null)
+        const cleanedTeachers = updatedTeachers.filter((t) => t.appointments && t.appointments.length > 0);
+        setUser({ ...user, teachers: cleanedTeachers });
       })
-      .catch((error)=>{
-        console.error("Error updating appointment", error)
-        alert("Appointment not updated.")
-      })
+      .catch((err) => {
+        console.error("Cancel error:", err);
+        alert("Failed to cancel appointment");
+      });
   };
 
+  const handleUpdate = (appointmentId) => {
+    if (!newLessonTime) return alert("Please choose a new time.");
 
-  const handleCreateTeacher = ()=>{
-    if (!newTeacherForm.name || !newTeacherForm.age) 
-      return alert("Please fill out both fields.")
+    fetch(`/appointments/${appointmentId}`, {
+      method: "PATCH",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({ lesson_datetime: newLessonTime }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Update failed.");
+        return res.json();
+      })
+      .then((updatedAppt) => {
+        alert("Appointment updated!");
+
+        const updatedTeachers = [...user.teachers];
+        const teacherIndex = updatedTeachers.findIndex((t) => t.id === updatedAppt.teacher_id);
+
+        if (teacherIndex !== -1) {
+          updatedTeachers[teacherIndex].appointments = updatedTeachers[teacherIndex].appointments.map((appt) =>
+            appt.id === updatedAppt.id ? updatedAppt : appt
+          );
+        }
+
+        setUser({ ...user, teachers: updatedTeachers });
+        setEditingApptId(null);
+      })
+      .catch((error) => {
+        console.error("Error updating appointment", error);
+        alert("Appointment not updated.");
+      });
+  };
+
+  const handleCreateTeacher = () => {
+    if (!newTeacherForm.name || !newTeacherForm.age) return alert("Please fill out both fields.");
 
     fetch("/teachers", {
       method: "POST",
-      headers: { "Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: newTeacherForm.name,
         age: parseInt(newTeacherForm.age),
       }),
     })
-    .then((res)=>{
-      if (res.ok) {
-        res.json().then((newTeacher)=> {
-          alert("Teacher created!")
-          setNewTeacherForm({ name:"", age: ""})
-
-          setTeachers([...teachers, newTeacher])
-        })
-      } else {
-        res.json().then((err)=> alert(err.error)|| "Failed to create teacher.")
-      }
-    })
-  }
+      .then((res) => {
+        if (res.ok) {
+          res.json().then((newTeacher) => {
+            alert("Teacher created!");
+            setNewTeacherForm({ name: "", age: "" });
+            setTeachers([...teachers, newTeacher]);
+          });
+        } else {
+          res.json().then((err) => alert(err.error || "Failed to create teacher."));
+        }
+      });
+  };
 
   return (
     <div className="page-container">
       <h2>Welcome, {user.name}!</h2>
 
-      {/* Profile Section */}
+      {/* Profile Display Only */}
       <div style={{ marginBottom: "2em" }}>
         <h3>Your Profile</h3>
-        {editingProfile ? (
-          <div>
-            <input type="text" name="name" value={profileForm.name} onChange={handleProfileChange} />
-            <input type="number" name="age" value={profileForm.age} onChange={handleProfileChange} style={{ marginLeft: "1em" }} />
-            <input type="text" name="instrument" value={profileForm.instrument} onChange={handleProfileChange} style={{ marginLeft: "1em" }} />
-            <button onClick={handleProfileSave} style={{ marginLeft: "1em" }}>Save</button>
-            <button onClick={() => setEditingProfile(false)} style={{ marginLeft: "0.5em" }}>Cancel</button>
-            <button onClick={handleDeleteAccount} style={{ marginLeft: "0.5em", backgroundColor: "red", color: "white" }}>Delete Account</button>
-          </div>
-        ) : (
-          <div>
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Age:</strong> {user.age}</p>
-            <p><strong>Instrument:</strong> {user.instrument}</p>
-            <button onClick={() => setEditingProfile(true)}>Edit Profile</button>
-          </div>
-        )}
+        <p><strong>Name:</strong> {user.name}</p>
+        <p><strong>Age:</strong> {user.age}</p>
+        <p><strong>Instrument:</strong> {user.instrument}</p>
       </div>
 
       {/* Schedule a Lesson */}
@@ -243,7 +153,9 @@ function StudentDashboard() {
         <select value={selectedTeacherId} onChange={(e) => setSelectedTeacherId(e.target.value)}>
           <option value="">Select a teacher</option>
           {teachers.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </select>
         <input
@@ -257,26 +169,28 @@ function StudentDashboard() {
         </button>
       </div>
 
-      <div style={{ marginTop: "2em"}}>
+      {/* Create a New Teacher */}
+      <div style={{ marginTop: "2em" }}>
         <h3>Create a New Teacher</h3>
         <input
-        type="text"
-        placeholder="Name"
-        value={newTeacherForm.name}
-        onChange={(e)=> setNewTeacherForm({...newTeacherForm, name: e.target.value})}/>
-        <input
-        type="number"
-        placeholder="Age"
-        value={newTeacherForm.age}
-        onChange={(e)=> setNewTeacherForm({...newTeacherForm, age: e.target.value})}
-        style={{ marginLeft: "1em"}}
+          type="text"
+          placeholder="Name"
+          value={newTeacherForm.name}
+          onChange={(e) => setNewTeacherForm({ ...newTeacherForm, name: e.target.value })}
         />
-        <button onClick={handleCreateTeacher} style={{ marginLeft:"1em"}}>
+        <input
+          type="number"
+          placeholder="Age"
+          value={newTeacherForm.age}
+          onChange={(e) => setNewTeacherForm({ ...newTeacherForm, age: e.target.value })}
+          style={{ marginLeft: "1em" }}
+        />
+        <button onClick={handleCreateTeacher} style={{ marginLeft: "1em" }}>
           Add Teacher
         </button>
-       </div>
+      </div>
 
-      {/* Appointments by Teacher */}
+      {/* Appointments Section */}
       <div style={{ marginTop: "2em" }}>
         <h3>Your Scheduled Lessons</h3>
         {user.teachers.length === 0 ? (
@@ -308,7 +222,10 @@ function StudentDashboard() {
                         ) : (
                           <>
                             {new Date(appt.lesson_datetime).toLocaleString()}
-                            <button onClick={() => handleCancel(appt.id, teacher.id)} style={{ marginLeft: "1em" }}>
+                            <button
+                              onClick={() => handleCancel(appt.id, teacher.id)}
+                              style={{ marginLeft: "1em" }}
+                            >
                               Cancel
                             </button>
                             <button
