@@ -122,18 +122,23 @@ function StudentDashboard() {
     .then(()=>{
       alert("Appointment cancelled!")
 
-      // Create a shallow copy of the user's teachers
+      
       const updatedTeachers = [...user.teachers]
-      // Find the teacher who owns this appointment.
       const teacherIndex = updatedTeachers.findIndex((t)=> t.id === teacherId)
-
+      // const updatedTeacher = updatedTeachers.find((t)=> t.id === teacherId)
+      // if (updatedTeacher) {
+      // updatedTeacher.appointments = updatedTeacher.appointments.filter((appt)=> appt.id !== appointmentId)
+      // const updatedTeachers = user.teachers.map((t)=> t.id === teacherId ? updatedTeacher : t)
+      // }
       if (teacherIndex !== -1) {
-        // Filter out the cancelled appointment
         updatedTeachers[teacherIndex].appointments = 
         updatedTeachers[teacherIndex].appointments.filter((appt)=> appt.id !== appointmentId)
+        
       }
-      // Update the context user object with the modified teachers list
-      setUser({...user, teachers: updatedTeachers })
+
+      const cleanedTeachers = updatedTeachers.filter((t)=> t.appointments && 
+    t.appointments.length > 0)
+      setUser({...user, teachers: cleanedTeachers })
     })
     .catch((err)=> {
       console.error("Cancel error:", err)
@@ -303,7 +308,7 @@ function StudentDashboard() {
                         ) : (
                           <>
                             {new Date(appt.lesson_datetime).toLocaleString()}
-                            <button onClick={() => handleCancel(appt.id)} style={{ marginLeft: "1em" }}>
+                            <button onClick={() => handleCancel(appt.id, teacher.id)} style={{ marginLeft: "1em" }}>
                               Cancel
                             </button>
                             <button

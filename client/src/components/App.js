@@ -2,7 +2,6 @@
 import React from "react";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Signup from "./Signup";
-import TeachersList from "./TeachersList";
 import Login from "./Login";
 import NavBar from "./NavBar";
 import StudentDashboard from "./StudentDashboard";
