@@ -1,6 +1,8 @@
 import React, { useState, useContext } from "react";
 import { UserContext } from "./UserContext";
 import { useNavigate } from "react-router-dom";
+import NewTeacherForm from "./NewTeacherForm";
+
 
 
 function StudentDashboard() {
@@ -10,7 +12,7 @@ function StudentDashboard() {
   const [lessonTime, setLessonTime] = useState("");
   const [editingApptId, setEditingApptId] = useState(null);
   const [newLessonTime, setNewLessonTime] = useState("");
-  const [newTeacherForm, setNewTeacherForm] = useState({ name: "", age: "" });
+  
 
   const navigate = useNavigate();
 
@@ -115,29 +117,7 @@ function StudentDashboard() {
       });
   };
 
-  const handleCreateTeacher = () => {
-    if (!newTeacherForm.name || !newTeacherForm.age) return alert("Please fill out both fields.");
-
-    fetch("/teachers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: newTeacherForm.name,
-        age: parseInt(newTeacherForm.age),
-      }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          res.json().then((newTeacher) => {
-            alert("Teacher created!");
-            setNewTeacherForm({ name: "", age: "" });
-            setTeachers([...teachers, newTeacher]);
-          });
-        } else {
-          res.json().then((err) => alert(err.error || "Failed to create teacher."));
-        }
-      });
-  };
+  
 
   return (
     <div className="page-container">
@@ -174,25 +154,7 @@ function StudentDashboard() {
       </div>
 
       {/* Create a New Teacher */}
-      <div style={{ marginTop: "2em" }}>
-        <h3>Create a New Teacher</h3>
-        <input
-          type="text"
-          placeholder="Name"
-          value={newTeacherForm.name}
-          onChange={(e) => setNewTeacherForm({ ...newTeacherForm, name: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Age"
-          value={newTeacherForm.age}
-          onChange={(e) => setNewTeacherForm({ ...newTeacherForm, age: e.target.value })}
-          style={{ marginLeft: "1em" }}
-        />
-        <button onClick={handleCreateTeacher} style={{ marginLeft: "1em" }}>
-          Add Teacher
-        </button>
-      </div>
+      <NewTeacherForm teachers={teachers} setTeachers={setTeachers} />
 
       {/* Appointments Section */}
       <div style={{ marginTop: "2em" }}>
