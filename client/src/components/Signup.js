@@ -1,152 +1,78 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useFormik } from "formik"
+import * as yup from "yup"
 
 function Signup() {
   const navigate = useNavigate();
 
-  // State for form fields
-  const [formValues, setFormValues] = useState({
-    username: "",
-    password: "",
-    name: "",
-    age: "",
-    instrument: "",
+  const validationSchema = yup.object().shape({
+    username: yup.string().required("Username is required"),
+    password: yup.string().required("Password is required"),
+    name: yup.string().required("Name is required"),
+    age: yup
+      .number()
+      .required("Age is required")
+      .typeError("Age must be a number")
+      .min(5, "Age must be at least 5"),
+    instrument: yup.string().required("Instrument is required"),
   });
 
-  // State for form validation errors
-  const [errors, setErrors] = useState({
-    username: "",
-    password: "",
-    name: "",
-    age: "",
-    instrument: "",
-  });
-
-  // State for form submission status
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Handle change in input fields
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues({
-      ...formValues,
-      [name]: value,
-    });
-  };
-
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Validation
-    const ageInt = parseInt(formValues.age, 10);
-    let formErrors = { username: "", password: "", name: "", instrument: "", age: "" };
-
-    if (!formValues.username) formErrors.username = "Required";
-    if (!formValues.password) formErrors.password = "Required";
-    if (!formValues.name) formErrors.name = "Required";
-    if (!formValues.instrument) formErrors.instrument = "Required";
-    if (isNaN(ageInt) || ageInt < 5) formErrors.age = "Age must be at least 5";
-
-    setErrors(formErrors);
-
-    // If there are no errors, submit the form
-    if (!Object.values(formErrors).some((error) => error)) {
-      setIsSubmitting(true);
-      const formData = { ...formValues, age: parseInt(formValues.age, 10) };
-
-      fetch("/signup", {
+  const formik = useFormik({
+    initialValues: {
+      username: "",
+      password: "",
+      name: "",
+      age: "",
+      instrument: "",
+    },
+    validationSchema,
+    onSubmit: (values, {setSubmitting}) => {
+      fetch('/signup', {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(values),
       })
-        .then((r) => {
-          setIsSubmitting(false);
-          if (r.ok) {
-            navigate("/login", {
-              state: {
-                message: "Please login to set an appointment with a teacher.",
-              },
-            });
-          } else {
-            return r.json().then((data) => {
-              alert(data.error || "Signup failed");
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("Signup error:", err);
-          alert("Something went wrong.");
-          setIsSubmitting(false);
-        });
+      .then((r)=> {
+        if (r.ok){
+          navigate("/login", {
+            state: { message: "Please login to set an appointment with a teacher."},
+          })
+        } else {
+          return r.json().then((data)=>{
+            alert(data.error || "Signup failed")
+          })
+        }
+      })
+      .catch((err)=>{
+        console.error("Signup error:", err)
+        alert("Something went wrong.")
+        setSubmitting(false)
+      })
     }
-  };
+  })
 
   return (
     <div className="page-container">
       <h2>Signup</h2>
-
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={formik.handleSubmit}>
+        {["username", "password", "name", "age", "instrument"].map((field) => (
+          <div key={field}>
+            <label>{field[0].toUpperCase() + field.slice(1)}</label>
+            <input
+              type={field === "password" ? "password" : field === "age" ? "number" : "text"}
+              name={field}
+              value={formik.values[field]}
+              onChange={formik.handleChange}
+            />
+            {formik.errors[field] && formik.touched[field] && (
+              <p style={{ color: "red" }}>{formik.errors[field]}</p>
+            )}
+          </div>
+        ))}
         <div>
-          <label>Username</label>
-          <input
-            type="text"
-            name="username"
-            value={formValues.username}
-            onChange={handleChange}
-          />
-          {errors.username && <p style={{ color: "red" }}>{errors.username}</p>}
-        </div>
-
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formValues.password}
-            onChange={handleChange}
-          />
-          {errors.password && <p style={{ color: "red" }}>{errors.password}</p>}
-        </div>
-
-        <div>
-          <label>Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formValues.name}
-            onChange={handleChange}
-          />
-          {errors.name && <p style={{ color: "red" }}>{errors.name}</p>}
-        </div>
-
-        <div>
-          <label>Age</label>
-          <input
-            type="number"
-            name="age"
-            value={formValues.age}
-            onChange={handleChange}
-          />
-          {errors.age && <p style={{ color: "red" }}>{errors.age}</p>}
-        </div>
-
-        <div>
-          <label>Instrument</label>
-          <input
-            type="text"
-            name="instrument"
-            value={formValues.instrument}
-            onChange={handleChange}
-          />
-          {errors.instrument && <p style={{ color: "red" }}>{errors.instrument}</p>}
-        </div>
-
-        <div>
-          <button type="submit" disabled={isSubmitting}>
-            Submit
+          <button type="submit" disabled={formik.isSubmitting}>
+            {formik.isSubmitting ? "Submitting..." : "Submit"}
           </button>
         </div>
       </form>
