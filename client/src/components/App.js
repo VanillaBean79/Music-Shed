@@ -7,7 +7,7 @@ import NavBar from "./NavBar";
 import StudentDashboard from "./StudentDashboard";
 import Home from "./Home";
 import { UserProvider } from "./UserContext";
-import Test from "./Test";
+
 
 
 function App() {
@@ -20,8 +20,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<StudentDashboard />} />
-          <Route path="/test" element={<Test />} />
-
+          
         </Routes>
       </Router>
     </UserProvider>

@@ -1,84 +1,70 @@
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "./UserContext";
+import { useFormik } from "formik"
+import * as yup from "yup"
 
 function Login() {
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const message = location.state?.message || ""
 
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fromSchema = yup.object().shape({
+    username: yup.string().required("Username is required"),
+    password: yup.string().required("Password is required."),
+  })
 
-  const message = location.state?.message || "";
-
-  function handleChange(e) {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setErrors({}); // Clear errors on input change
-  }
-
-  function validate() {
-    const newErrors = {};
-    if (!formData.username) newErrors.username = "Username is required";
-    if (!formData.password) newErrors.password = "Password is required";
-    return newErrors;
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    fetch("/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    })
-      .then((res) => {
+  const formik = useFormik({
+    initialValues: {
+      username: "",
+      password: "",
+    },
+    validationSchema: fromSchema,
+    onSubmit: (values, { setErrors, setSubmitting }) => {
+      fetch("/login",{
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(values),
+      })
+      .then((res)=>{
         if (res.ok) {
-          return res.json().then((user) => {
-            setUser(user);
-            navigate("/dashboard");
-          });
+          return res.json().then((user)=> {
+            setUser(user)
+            navigate("/dashboard")
+          })
         } else {
-          return res.json().then((err) => {
-            setErrors({ password: err.error || "Login failed" });
-          });
+          return res.json().then((err)=>{
+            setErrors({ password: err.error || "Login failed"})
+          })
         }
       })
-      .catch(() => {
-        setErrors({ password: "Network error. Please try again." });
+      .catch(()=> {
+        setErrors({ password: "Network error. Please try again."})
       })
-      .finally(() => setIsSubmitting(false));
-  }
+      .finally(()=>{
+        setSubmitting(false)
+      })
+    },
+  })
 
   return (
     <div className="page-container">
       <h2>Login</h2>
       {message && <p style={{ color: "green" }}>{message}</p>}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={formik.handleSubmit}>
         <div>
           <input
             type="text"
             name="username"
             placeholder="Username"
-            value={formData.username}
-            onChange={handleChange}
+            onChange={formik.handleChange}
+            value={formik.values.username}
           />
-          {errors.username && <p style={{ color: "red" }}>{errors.username}</p>}
+          {formik.errors.username && (
+            <p style={{ color: "red" }}>{formik.errors.username}</p>
+          )}
         </div>
 
         <div>
@@ -86,14 +72,16 @@ function Login() {
             type="password"
             name="password"
             placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
+            onChange={formik.handleChange}
+            value={formik.values.password}
           />
-          {errors.password && <p style={{ color: "red" }}>{errors.password}</p>}
+          {formik.errors.password && (
+            <p style={{ color: "red" }}>{formik.errors.password}</p>
+          )}
         </div>
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Logging in..." : "Login"}
+        <button type="submit" disabled={formik.isSubmitting}>
+          {formik.isSubmitting ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
