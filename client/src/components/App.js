@@ -1,12 +1,14 @@
 // App.js
 import React from "react";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // Changed to BrowserRouter
 import Signup from "./Signup";
 import Login from "./Login";
 import NavBar from "./NavBar";
 import StudentDashboard from "./StudentDashboard";
 import Home from "./Home";
 import { UserProvider } from "./UserContext";
+import Test from "./Test";
+
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<StudentDashboard />} />
+          <Route path="/test" element={<Test />} />
+
         </Routes>
       </Router>
     </UserProvider>
@@ -25,3 +29,4 @@ function App() {
 }
 
 export default App;
+

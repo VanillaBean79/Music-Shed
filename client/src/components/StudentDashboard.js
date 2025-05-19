@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { UserContext } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 
+
 function StudentDashboard() {
   const { user, teachers, setUser, setTeachers, loading } = useContext(UserContext);
 
@@ -62,14 +63,17 @@ function StudentDashboard() {
         alert("Appointment cancelled!");
         const updatedTeachers = [...user.teachers];
         const teacherIndex = updatedTeachers.findIndex((t) => t.id === teacherId);
-
+  
         if (teacherIndex !== -1) {
           updatedTeachers[teacherIndex].appointments = updatedTeachers[teacherIndex].appointments.filter(
             (appt) => appt.id !== appointmentId
           );
         }
-
+  
+        // After appointment deletion, filter out teachers with no appointments
         const cleanedTeachers = updatedTeachers.filter((t) => t.appointments && t.appointments.length > 0);
+        
+        // Update state with teachers who still have appointments
         setUser({ ...user, teachers: cleanedTeachers });
       })
       .catch((err) => {
@@ -77,7 +81,7 @@ function StudentDashboard() {
         alert("Failed to cancel appointment");
       });
   };
-
+  
   const handleUpdate = (appointmentId) => {
     if (!newLessonTime) return alert("Please choose a new time.");
 
