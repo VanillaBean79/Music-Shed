@@ -3,6 +3,8 @@ import { UserContext } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 import NewTeacherForm from "./NewTeacherForm";
 import ScheduleLessonForm from "./ScheduleLessonForm"
+import EditAppointmentForm from "./EditAppointmentForm";
+
 
 
 
@@ -48,13 +50,11 @@ function StudentDashboard() {
       });
   };
   
-  const handleUpdate = (appointmentId) => {
-    if (!newLessonTime) return alert("Please choose a new time.");
-
+  const handleUpdate = (appointmentId, newTime) => {
     fetch(`/appointments/${appointmentId}`, {
       method: "PATCH",
       headers: { "Content-type": "application/json" },
-      body: JSON.stringify({ lesson_datetime: newLessonTime }),
+      body: JSON.stringify({ lesson_datetime: newTime }),
     })
       .then((res) => {
         if (!res.ok) throw new Error("Update failed.");
@@ -62,16 +62,16 @@ function StudentDashboard() {
       })
       .then((updatedAppt) => {
         alert("Appointment updated!");
-
+  
         const updatedTeachers = [...user.teachers];
         const teacherIndex = updatedTeachers.findIndex((t) => t.id === updatedAppt.teacher_id);
-
+  
         if (teacherIndex !== -1) {
           updatedTeachers[teacherIndex].appointments = updatedTeachers[teacherIndex].appointments.map((appt) =>
             appt.id === updatedAppt.id ? updatedAppt : appt
           );
         }
-
+  
         setUser({ ...user, teachers: updatedTeachers });
         setEditingApptId(null);
       })
@@ -80,6 +80,7 @@ function StudentDashboard() {
         alert("Appointment not updated.");
       });
   };
+  
 
   
 
@@ -123,20 +124,13 @@ function StudentDashboard() {
                     .map((appt) => (
                       <li key={appt.id}>
                         {editingApptId === appt.id ? (
-                          <>
-                            <input
-                              type="datetime-local"
-                              value={newLessonTime}
-                              onChange={(e) => setNewLessonTime(e.target.value)}
+                            <EditAppointmentForm
+                              appt={appt}
+                              onUpdate={(id, newTime) => handleUpdate(id, newTime)}
+                              onCancel={() => setEditingApptId(null)}
                             />
-                            <button onClick={() => handleUpdate(appt.id)} style={{ marginLeft: "0.5em" }}>
-                              Save
-                            </button>
-                            <button onClick={() => setEditingApptId(null)} style={{ marginLeft: "0.5em" }}>
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
+                          ) : (
+
                           <>
                             {new Date(appt.lesson_datetime).toLocaleString()}
                             <button
