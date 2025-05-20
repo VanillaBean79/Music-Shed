@@ -2,14 +2,12 @@ import React, { useState, useContext } from "react";
 import { UserContext } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 import NewTeacherForm from "./NewTeacherForm";
+import ScheduleLessonForm from "./ScheduleLessonForm"
 
 
 
 function StudentDashboard() {
   const { user, teachers, setUser, setTeachers, loading } = useContext(UserContext);
-
-  const [selectedTeacherId, setSelectedTeacherId] = useState("");
-  const [lessonTime, setLessonTime] = useState("");
   const [editingApptId, setEditingApptId] = useState(null);
   const [newLessonTime, setNewLessonTime] = useState("");
   
@@ -18,40 +16,6 @@ function StudentDashboard() {
 
   if (loading || !user) return <p>Loading student dashboard...</p>;
 
-  const handleSchedule = () => {
-    if (!selectedTeacherId || !lessonTime) return alert("Please fill out all fields.");
-    fetch("/appointments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        teacher_id: selectedTeacherId,
-        student_id: user.id,
-        lesson_datetime: lessonTime,
-      }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          res.json().then((newAppt) => {
-            alert("Appointment scheduled!");
-            const updatedTeachers = [...user.teachers];
-            const teacherIndex = updatedTeachers.findIndex((t) => t.id === newAppt.teacher_id);
-
-            if (teacherIndex !== -1) {
-              updatedTeachers[teacherIndex].appointments.push(newAppt);
-            } else {
-              const teacher = teachers.find((t) => t.id === newAppt.teacher_id);
-              updatedTeachers.push({ ...teacher, appointments: [newAppt] });
-            }
-
-            setUser({ ...user, teachers: updatedTeachers });
-            setSelectedTeacherId("");
-            setLessonTime("");
-          });
-        } else {
-          res.json().then((err) => alert(err.error || "Failed to schedule."));
-        }
-      });
-  };
 
   const handleCancel = (appointmentId, teacherId) => {
     fetch(`/appointments/${appointmentId}`, {
@@ -132,29 +96,16 @@ function StudentDashboard() {
       </div>
 
       {/* Schedule a Lesson */}
-      <div>
-        <h3>Schedule a Lesson</h3>
-        <select value={selectedTeacherId} onChange={(e) => setSelectedTeacherId(e.target.value)}>
-          <option value="">Select a teacher</option>
-          {teachers.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <input
-          type="datetime-local"
-          value={lessonTime}
-          onChange={(e) => setLessonTime(e.target.value)}
-          style={{ marginLeft: "1em" }}
-        />
-        <button onClick={handleSchedule} style={{ marginLeft: "1em" }}>
-          Schedule
-        </button>
-      </div>
-
+      <ScheduleLessonForm 
+      teachers={teachers}
+      user={user}
+      setUser={setUser}
+      />
       {/* Create a New Teacher */}
-      <NewTeacherForm teachers={teachers} setTeachers={setTeachers} />
+      <NewTeacherForm 
+      teachers={teachers} 
+      setTeachers={setTeachers} 
+      />
 
       {/* Appointments Section */}
       <div style={{ marginTop: "2em" }}>
